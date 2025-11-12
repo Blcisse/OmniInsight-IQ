@@ -1,0 +1,123 @@
+OmniInsight-IQ/
+│
+├── 📄 package.json
+├── 📄 tsconfig.json
+├── 📄 next.config.js
+├── 📄 README .md
+├── 📄 .env.local
+│
+├── 📂 public/
+│   ├── logo.svg
+│   ├── favicon.ico
+│   ├── images/
+│   │   ├── hero/
+│   │   ├── products/
+│   │   └── analytics/
+│   └── assets/
+│       └── illustrations/
+│
+├── 📂 src/
+│   ├── 📂 app/
+│   │   ├── layout.tsx
+│   │   ├── globals.css
+│   │   ├── page.tsx
+│   │   ├── 📂 dashboard/
+│   │   │   ├── page.tsx
+│   │   │   ├── layout.tsx
+│   │   │   ├── 📂 components/
+│   │   │   │   ├── SalesOverviewChart.tsx
+│   │   │   │   ├── MarketingPerformance.tsx
+│   │   │   │   ├── CustomerInsightsCard.tsx
+│   │   │   │   └── ConversionMetrics.tsx
+│   │   │   ├── 📂 analytics/
+│   │   │   │   ├── KPIMetrics.tsx
+│   │   │   │   ├── DataTrendsChart.tsx
+│   │   │   │   ├── ForecastVisualization.tsx
+│   │   │   │   └── RevenueBreakdown.tsx
+│   │   │   ├── 📂 reports/
+│   │   │   │   ├── generateReport.ts
+│   │   │   │   ├── ReportTable.tsx
+│   │   │   │   └── ExportReportButton.tsx
+│   │   │   └── 📂 data/
+│   │   │       ├── mockData.ts
+│   │   │       ├── salesData.json
+│   │   │       └── marketingData.json
+│   │   │
+│   │   ├── 📂 auth/
+│   │   │   ├── login.tsx
+│   │   │   ├── register.tsx
+│   │   │   └── reset-password.tsx
+│   │   │
+│   │   ├── 📂 api/
+│   │   │   ├── routeHandlers/
+│   │   │   │   ├── sales.ts
+│   │   │   │   ├── analytics.ts
+│   │   │   │   ├── marketing.ts
+│   │   │   │   └── insights.ts
+│   │   │   └── utils/
+│   │   │       ├── prismaClient.ts
+│   │   │       ├── dataTransformers.ts
+│   │   │       └── apiHelpers.ts
+│   │   │
+│   │   ├── 📂 components/
+│   │   │   ├── Navbar.tsx
+│   │   │   ├── Sidebar.tsx
+│   │   │   ├── Footer.tsx
+│   │   │   ├── ThemeToggle.tsx
+│   │   │   ├── SearchBar.tsx
+│   │   │   └── Loader.tsx
+│   │   │
+│   │   ├── 📂 lib/
+│   │   │   ├── prisma.ts
+│   │   │   ├── openaiClient.ts
+│   │   │   ├── chartUtils.ts
+│   │   │   ├── mlModels/
+│   │   │   │   ├── regressionModel.ts
+│   │   │   │   ├── clusteringModel.ts
+│   │   │   │   └── anomalyDetection.ts
+│   │   │   └── helpers/
+│   │   │       ├── dataProcessing.ts
+│   │   │       ├── dataValidation.ts
+│   │   │       └── metricsCalculation.ts
+│   │   │
+│   │   ├── 📂 styles/
+│   │   │   ├── theme.css
+│   │   │   ├── dashboard.css
+│   │   │   ├── charts.css
+│   │   │   └── components.css
+│   │   │
+│   │   ├── 📂 hooks/
+│   │   │   ├── useFetchData.ts
+│   │   │   ├── useUserAuth.ts
+│   │   │   ├── useTheme.ts
+│   │   │   └── useCharts.ts
+│   │   │
+│   │   ├── 📂 context/
+│   │   │   ├── ThemeContext.tsx
+│   │   │   ├── AuthContext.tsx
+│   │   │   ├── DataContext.tsx
+│   │   │   └── FilterContext.tsx
+│   │   │
+│   │   └── 📂 utils/
+│   │       ├── formatters.ts
+│   │       ├── constants.ts
+│   │       ├── dateUtils.ts
+│   │       └── validations.ts
+│   │
+│   └── 📂 tests/
+│       ├── unit/
+│       │   ├── chartUtils.test.ts
+│       │   ├── dataProcessing.test.ts
+│       │   └── apiHandlers.test.ts
+│       ├── integration/
+│       │   ├── dashboard.test.ts
+│       │   ├── reports.test.ts
+│       │   └── authFlow.test.ts
+│       └── mocks/
+│           ├── mockApi.ts
+│           └── mockResponses.json
+│
+└── 📂 scripts/
+    ├── seedDatabase.ts
+    ├── generateMockData.ts
+    └── deploy.sh

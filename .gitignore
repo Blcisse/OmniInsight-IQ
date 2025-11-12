@@ -1,0 +1,17 @@
+# Node and Python environments
+node_modules/
+venv/
+OIIQ-venv/
+__pycache__/
+*.pyc
+*.dylib
+*.node
+
+
+# Build and cache
+dist/
+build/
+.cache/
+.next/
+.env
+EOF
