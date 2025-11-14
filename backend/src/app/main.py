@@ -61,25 +61,25 @@ def create_app() -> FastAPI:
     # if modules are optional or loaded later.
     try:
         from .routers import sales  # type: ignore
-        app.include_router(sales.router, tags=["sales"])
+        app.include_router(sales.router)
     except Exception:
         pass
 
     try:
         from .routers import analytics  # type: ignore
-        app.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
+        app.include_router(analytics.router)
     except Exception:
         pass
 
     try:
         from .routers import marketing  # type: ignore
-        app.include_router(marketing.router, prefix="/marketing", tags=["marketing"])
+        app.include_router(marketing.router)
     except Exception:
         pass
 
     try:
         from .routers import insights  # type: ignore
-        app.include_router(insights.router, prefix="/insights", tags=["insights"])
+        app.include_router(insights.router)
     except Exception:
         pass
 
@@ -108,6 +108,13 @@ def create_app() -> FastAPI:
     try:
         from src.api.analytics_dashboard.analytics_dashboard_router import router as analytics_dashboard_router  # type: ignore
         app.include_router(analytics_dashboard_router, tags=["Analytics Dashboard"])
+    except Exception:
+        pass
+
+    # Include Processed Data routes
+    try:
+        from .routers import processed_data  # type: ignore
+        app.include_router(processed_data.router)
     except Exception:
         pass
 

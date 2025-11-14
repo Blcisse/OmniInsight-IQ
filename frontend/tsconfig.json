@@ -1,51 +1,44 @@
 {
-  // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
-    // File Layout
-    // "rootDir": "./src",
-    // "outDir": "./dist",
-    // Environment Settings
-    // See also https://aka.ms/tsconfig/module
+    // Module & Target
     "module": "nodenext",
     "target": "esnext",
-    "types": [],
-    // For nodejs:
-    // "lib": ["esnext"],
-    // "types": ["node"],
-    // and npm install -D @types/node
-    // Other Outputs
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
-    // Stricter Typechecking Options
+
+    // Typechecking & Strictness
+    "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-    // Style Options
-    // "noImplicitReturns": true,
-    // "noImplicitOverride": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-    // "noFallthroughCasesInSwitch": true,
-    // "noPropertyAccessFromIndexSignature": true,
-    // Recommended Options
-    "strict": true,
-    "jsx": "react-jsx",
-    "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
+
+    // JSX & React
+    "jsx": "react-jsx",
+
+    // Source & Output
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
     "noEmit": true,
     "incremental": true,
-    "esModuleInterop": true,
-    "moduleResolution": "node",
+    "allowJs": true,
+
+    // Module Resolution
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true,
+    "esModuleInterop": true,
+
+    // Paths / Aliases
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+
+    // Libraries
+    "lib": ["dom", "dom.iterable", "esnext"],
+
+    // Plugins
     "plugins": [
       {
         "name": "next"

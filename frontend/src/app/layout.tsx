@@ -12,11 +12,11 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
+      <body style={{ background: "var(--base-dark)", minHeight: "100vh" }}>
         <Navbar />
-        <div style={{ display: "flex", minHeight: "80vh" }}>
+        <div style={{ display: "flex", minHeight: "80vh", background: "var(--base-dark)" }}>
           <Sidebar />
-          <main style={{ flex: 1, padding: "1rem" }}>{children}</main>
+          <main style={{ flex: 1, padding: "1.5rem", background: "var(--base-dark)" }}>{children}</main>
         </div>
         <Footer />
       </body>

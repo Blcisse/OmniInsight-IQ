@@ -1,56 +1,44 @@
 "use client";
-import React, { useEffect, useState } from "react";
-
-type LiveSummary = {
-  window: string;
-  since: string;
-  total_revenue: number;
-  orders_count: number;
-  avg_order_value: number;
-};
+import React, { useEffect } from "react";
+import { useAnalyticsStore } from "@/store/hooks";
 
 export default function LiveUpdateWidget({ window = "24h" }: { window?: "24h" | "7d" }) {
-  const [data, setData] = useState<LiveSummary | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  async function load() {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/analytics/live?window=${window}`);
-      if (!res.ok) throw new Error("Failed to load live data");
-      const json = await res.json();
-      setData(json);
-      setError(null);
-    } catch (e: any) {
-      setError(e?.message || "Error loading data");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const analytics = useAnalyticsStore();
 
   useEffect(() => {
-    load();
-    const t = setInterval(load, 15000); // refresh every 15s
-    return () => clearInterval(t);
-  }, [window]);
+    analytics.fetchLiveMetrics(window);
+    const interval = setInterval(() => {
+      analytics.fetchLiveMetrics(window);
+    }, 15000); // refresh every 15s
+    return () => clearInterval(interval);
+  }, [window, analytics.fetchLiveMetrics]);
+
+  const data = analytics.liveMetrics;
+  const loading = analytics.loading;
+  const error = analytics.error;
 
   if (loading) return <div>Loading live summary…</div>;
   if (error) return <div style={{ color: "red" }}>{error}</div>;
-  if (!data) return null;
+  if (!data || typeof data !== "object") return null;
+
+  const windowValue = (data.window as string) || window;
+  const totalRevenue = typeof data.total_revenue === "number" ? data.total_revenue : 0;
+  const ordersCount = typeof data.orders_count === "number" ? data.orders_count : 0;
+  const avgOrderValue = typeof data.avg_order_value === "number" ? data.avg_order_value : 0;
+  const since = (data.since as string) || "";
 
   return (
     <div style={{ border: "1px solid #e2e8f0", borderRadius: 8, padding: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-        <strong>Live Summary ({data.window})</strong>
-        <button onClick={load}>Refresh</button>
+        <strong>Live Summary ({windowValue})</strong>
+        <button onClick={() => analytics.fetchLiveMetrics(window)}>Refresh</button>
       </div>
       <div style={{ display: "flex", gap: 16 }}>
-        <Stat label="Total Revenue" value={`$${data.total_revenue.toFixed(2)}`} />
-        <Stat label="Orders" value={data.orders_count.toString()} />
-        <Stat label="Avg Order Value" value={`$${data.avg_order_value.toFixed(2)}`} />
+        <Stat label="Total Revenue" value={`$${totalRevenue.toFixed(2)}`} />
+        <Stat label="Orders" value={ordersCount.toString()} />
+        <Stat label="Avg Order Value" value={`$${avgOrderValue.toFixed(2)}`} />
       </div>
-      <div style={{ marginTop: 8, color: "#64748b", fontSize: 12 }}>Since {data.since}</div>
+      {since && <div style={{ marginTop: 8, color: "#64748b", fontSize: 12 }}>Since {since}</div>}
     </div>
   );
 }

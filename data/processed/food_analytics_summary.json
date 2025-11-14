@@ -1,0 +1,14 @@
+{
+  "total_foods": 2395,
+  "avg_calories": 223.7695198329854,
+  "avg_protein": 13.40077745302714,
+  "avg_fat": 10.176275574112735,
+  "avg_carbs": 18.58902129436326,
+  "categories": {
+    "group5": 722,
+    "group3": 571,
+    "group1": 551,
+    "group2": 319,
+    "group4": 232
+  }
+}

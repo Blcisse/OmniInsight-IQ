@@ -9,10 +9,10 @@
     "start": "next start",
     "lint": "next lint",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "api:test:analytics": "node --loader ts-node/esm src/api/tests/analyticsApi.test.ts",
-    "api:test:forecast": "node --loader ts-node/esm src/api/tests/forecastingApi.test.ts",
-    "api:test:clusters": "node --loader ts-node/esm src/api/tests/clusteringApi.test.ts",
-    "api:test:recs": "node --loader ts-node/esm src/api/tests/recommendationsApi.test.ts",
+    "api:test:analytics": "tsx src/api/tests/analyticsApi.test.ts",
+    "api:test:forecast": "tsx src/api/tests/forecastingApi.test.ts",
+    "api:test:clusters": "tsx src/api/tests/clusteringApi.test.ts",
+    "api:test:recs": "tsx src/api/tests/recommendationsApi.test.ts",
     "api:test": "npm run api:test:analytics && npm run api:test:forecast && npm run api:test:clusters && npm run api:test:recs"
   },
   "keywords": [],
@@ -21,6 +21,7 @@
   "dependencies": {
     "axios": "^1.13.2",
     "dotenv": "^17.2.3",
+    "swr": "^2.2.5",
     "framer-motion": "^12.23.24",
     "next": "^16.0.1",
     "react": "^19.2.0",
@@ -34,6 +35,7 @@
     "@types/node": "^24.10.0",
     "@types/react": "19.2.2",
     "ts-node": "^10.9.2",
+    "tsx": "^4.19.2",
     "typescript": "^5.9.3"
   }
 }

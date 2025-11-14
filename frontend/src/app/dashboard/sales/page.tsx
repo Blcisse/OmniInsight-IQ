@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import SalesTable from "@/app/components/tables/SalesTable";
 
+
 export default function SalesPage() {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

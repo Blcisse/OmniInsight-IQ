@@ -7,3 +7,7 @@ export async function getAnalyticsSummary(): Promise<ApiResponse<any>> {
 export async function getAnalyticsPredict(horizonDays = 5): Promise<ApiResponse<any>> {
   return toApiResponse(http.get(`/api/analytics/predict`, { params: { horizon_days: horizonDays } }));
 }
+
+export async function getAnalyticsLive(window = "24h"): Promise<ApiResponse<any>> {
+  return toApiResponse(http.get(`/api/analytics/live`, { params: { window } }));
+}
