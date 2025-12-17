@@ -83,6 +83,12 @@ def create_app() -> FastAPI:
     except Exception:
         pass
 
+    try:
+        from .routers import insightops_router  # type: ignore
+        app.include_router(insightops_router.router)
+    except Exception:
+        pass
+
     # Include AI & Predictive Engine routes
     try:
         from src.api.model_inference.model_inference_router import router as model_inference_router  # type: ignore
