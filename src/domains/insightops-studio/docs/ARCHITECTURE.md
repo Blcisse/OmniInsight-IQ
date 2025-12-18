@@ -25,3 +25,7 @@ InsightOps Studio operates as a domain-isolated module within OmniInsight IQ. Th
 ## Phase Positioning
 - **CD1**: Scaffolding and architecture framing (this document).
 - **CD2+**: Introduce schemas, seed data, deterministic analytics, dashboards, and eventually AI summaries in CD5.
+
+## DB & Migrations (CD2 framing)
+- **Pattern**: Follow the existing platform approach of SQLAlchemy ORM models with Alembic migrations (see `backend/src/app/core/database.py` and `backend/migrations/`). This keeps InsightOps aligned with async PostgreSQL usage already wired in the app.
+- **Naming convention (locked)**: Use the `io_` table prefix for InsightOps tables (e.g., `io_kpi_daily`, `io_engagement_signal`). This preserves isolation without creating a separate Postgres schema and avoids cross-domain name collisions.
