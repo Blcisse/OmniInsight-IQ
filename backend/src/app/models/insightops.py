@@ -22,6 +22,10 @@ class IoKpiDailyORM(Base):
     metric_key: Mapped[str] = mapped_column(String, nullable=False)
     metric_value: Mapped[Decimal] = mapped_column(Numeric(18, 4), nullable=False)
     metric_unit: Mapped[str | None] = mapped_column(String, nullable=True)
+    region: Mapped[str | None] = mapped_column(String, nullable=True)
+    segment: Mapped[str | None] = mapped_column(String, nullable=True)
+    channel: Mapped[str | None] = mapped_column(String, nullable=True)
+    product: Mapped[str | None] = mapped_column(String, nullable=True)
     dimensions: Mapped[str | None] = mapped_column(Text, nullable=True)
     source: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -42,6 +46,10 @@ class IoEngagementSignalDailyORM(Base):
     org_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
     signal_key: Mapped[str] = mapped_column(String, nullable=False)
     signal_value: Mapped[Decimal] = mapped_column(Numeric(18, 4), nullable=False)
+    region: Mapped[str | None] = mapped_column(String, nullable=True)
+    segment: Mapped[str | None] = mapped_column(String, nullable=True)
+    channel: Mapped[str | None] = mapped_column(String, nullable=True)
+    product: Mapped[str | None] = mapped_column(String, nullable=True)
     dimensions: Mapped[str | None] = mapped_column(Text, nullable=True)
     source: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
