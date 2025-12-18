@@ -7,3 +7,10 @@ This folder hosts domain-isolated schema definitions for InsightOps Studio. CD2 
 - **`io_exec_summary`**: UUID `id`, `period_start`, `period_end`, `org_id` (indexed), `summary_type`, `summary_text`, optional `model_name`, and `created_at`/`updated_at` timestamps.
 
 Tables use the locked `io_` prefix and are provisioned via SQL-first migration scripts (see `backend/migrations/sql/insightops_tables.sql`).
+This folder will host domain-isolated schema definitions for InsightOps Studio. Draft entities include:
+
+- **KPI entities**: commercial performance indicators, targets, and goal tracking.
+- **Engagement entities**: signals around recruiter or client interactions and touchpoints.
+- **Summary entities**: structured summaries that capture narrative insights for reports and dashboards.
+
+No implementation code is present yet; these notes serve as scaffolding for upcoming schema design.
