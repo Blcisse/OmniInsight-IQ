@@ -1,21 +1,11 @@
 from __future__ import annotations
 
-from datetime import date
 from typing import List, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .insightops_analytics import (
-    ALLOWED_KPI_KEYS,
-    ALLOWED_SIGNAL_KEYS,
-    DEFAULT_LOOKBACK_DAYS,
-    DEFAULT_ORG_ID,
-    MetricSeriesPoint,
-    default_window,
-    fetch_kpi_series,
-    fetch_signal_series,
-    parse_date,
-)
+from ..schemas.insightops_analytics import Anomaly, AnomalyResponse, SeriesPoint
+from .insightops_analytics import ALLOWED_KPI_KEYS, ALLOWED_SIGNAL_KEYS, DEFAULT_LOOKBACK_DAYS, DEFAULT_ORG_ID, default_window, fetch_kpi_series, fetch_signal_series, parse_date
 
 # Thresholds
 SPIKE_THRESHOLD_PCT = 0.30  # 30% deviation
@@ -24,15 +14,14 @@ FLATLINE_DAYS = 3
 COLLAPSE_THRESHOLD_PCT = 0.50  # 50% drop vs prior window
 
 
-async def _load_points(
+async def _load_kpi_points(
     db: AsyncSession,
     org_id: str,
-    key: str,
+    metric_key: str,
     start_date: Optional[str],
     end_date: Optional[str],
     lookback_days: int,
-    fetcher,
-) -> List[MetricSeriesPoint]:
+) -> List[SeriesPoint]:
     parsed_start = parse_date(start_date)
     parsed_end = parse_date(end_date)
     if parsed_start is None:
@@ -41,18 +30,43 @@ async def _load_points(
         window_start = parsed_start
         window_end = parsed_end or parsed_start
 
-    rows = await fetcher(
+    rows = await fetch_kpi_series(
         db=db,
         org_id=org_id,
+        metric_key=metric_key,
         start_date=window_start,
         end_date=window_end,
-        metric_key=key if fetcher is fetch_kpi_series else None,
-        signal_key=key if fetcher is fetch_signal_series else None,
     )
-    return [MetricSeriesPoint(date=row["date"], value=float(row["value"])) for row in rows]
+    return [SeriesPoint(date=row["date"], value=float(row["value"])) for row in rows]
 
 
-def _maybe_add_spike_anomaly(anomalies: List[dict], points: List[MetricSeriesPoint]) -> None:
+async def _load_signal_points(
+    db: AsyncSession,
+    org_id: str,
+    signal_key: str,
+    start_date: Optional[str],
+    end_date: Optional[str],
+    lookback_days: int,
+) -> List[SeriesPoint]:
+    parsed_start = parse_date(start_date)
+    parsed_end = parse_date(end_date)
+    if parsed_start is None:
+        window_start, window_end = default_window(parsed_end, lookback_days)
+    else:
+        window_start = parsed_start
+        window_end = parsed_end or parsed_start
+
+    rows = await fetch_signal_series(
+        db=db,
+        org_id=org_id,
+        signal_key=signal_key,
+        start_date=window_start,
+        end_date=window_end,
+    )
+    return [SeriesPoint(date=row["date"], value=float(row["value"])) for row in rows]
+
+
+def _maybe_add_spike_anomaly(anomalies: List[dict], points: List[SeriesPoint]) -> None:
     if len(points) < 2:
         return
     baseline_points = points[:-1]
@@ -75,7 +89,7 @@ def _maybe_add_spike_anomaly(anomalies: List[dict], points: List[MetricSeriesPoi
         )
 
 
-def _maybe_add_gap_anomaly(anomalies: List[dict], points: List[MetricSeriesPoint]) -> None:
+def _maybe_add_gap_anomaly(anomalies: List[dict], points: List[SeriesPoint]) -> None:
     for prev, curr in zip(points, points[1:]):
         gap = (curr.date - prev.date).days
         if gap > KPI_GAP_THRESHOLD_DAYS:
@@ -89,7 +103,7 @@ def _maybe_add_gap_anomaly(anomalies: List[dict], points: List[MetricSeriesPoint
             )
 
 
-def compute_kpi_anomalies(points: List[MetricSeriesPoint]) -> List[dict]:
+def compute_kpi_anomalies(points: List[SeriesPoint]) -> List[dict]:
     anomalies: List[dict] = []
     if not points:
         return anomalies
@@ -98,7 +112,7 @@ def compute_kpi_anomalies(points: List[MetricSeriesPoint]) -> List[dict]:
     return anomalies
 
 
-def compute_engagement_anomalies(points: List[MetricSeriesPoint]) -> List[dict]:
+def compute_engagement_anomalies(points: List[SeriesPoint]) -> List[dict]:
     anomalies: List[dict] = []
     if not points:
         return anomalies
@@ -143,33 +157,33 @@ async def get_anomalies(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     lookback_days: int = DEFAULT_LOOKBACK_DAYS,
-) -> List[dict]:
+) -> AnomalyResponse:
     if metric_key and signal_key:
         raise ValueError("Provide either metric_key or signal_key, not both.")
     if metric_key:
         if metric_key not in ALLOWED_KPI_KEYS:
             raise ValueError(f"Unsupported metric_key '{metric_key}'. Allowed: {sorted(ALLOWED_KPI_KEYS)}")
-        points = await _load_points(
+        points = await _load_kpi_points(
             db=db,
             org_id=org_id,
-            key=metric_key,
+            metric_key=metric_key,
             start_date=start_date,
             end_date=end_date,
             lookback_days=lookback_days,
-            fetcher=fetch_kpi_series,
         )
-        return compute_kpi_anomalies(points)
+        return AnomalyResponse(org_id=org_id, anomalies=[Anomaly.model_validate(a) for a in compute_kpi_anomalies(points)])
     if signal_key:
         if signal_key not in ALLOWED_SIGNAL_KEYS:
             raise ValueError(f"Unsupported signal_key '{signal_key}'. Allowed: {sorted(ALLOWED_SIGNAL_KEYS)}")
-        points = await _load_points(
+        points = await _load_signal_points(
             db=db,
             org_id=org_id,
-            key=signal_key,
+            signal_key=signal_key,
             start_date=start_date,
             end_date=end_date,
             lookback_days=lookback_days,
-            fetcher=fetch_signal_series,
         )
-        return compute_engagement_anomalies(points)
+        return AnomalyResponse(
+            org_id=org_id, anomalies=[Anomaly.model_validate(a) for a in compute_engagement_anomalies(points)]
+        )
     raise ValueError("metric_key or signal_key is required to compute anomalies.")

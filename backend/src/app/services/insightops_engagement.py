@@ -8,12 +8,11 @@ from .insightops_analytics import (
     ALLOWED_SIGNAL_KEYS,
     DEFAULT_LOOKBACK_DAYS,
     DEFAULT_ORG_ID,
-    MetricSeriesPoint,
-    SeriesResponse,
     default_window,
     fetch_signal_series,
     parse_date,
 )
+from ..schemas.insightops_analytics import EngagementSummary, SeriesPoint, SeriesResponse
 
 
 async def get_signal_series(
@@ -43,33 +42,34 @@ async def get_signal_series(
         end_date=window_end,
     )
 
-    points = [MetricSeriesPoint(date=row["date"], value=float(row["value"])) for row in rows]
-    return SeriesResponse(org_id=org_id, key=signal_key, points=points)
+    points = [SeriesPoint(date=row["date"], value=float(row["value"])) for row in rows]
+    return SeriesResponse(org_id=org_id, key=signal_key, start_date=window_start, end_date=window_end, points=points)
 
 
-def aggregate_signals(points: List[MetricSeriesPoint]) -> dict:
+def aggregate_signals(points: List[SeriesPoint]) -> EngagementSummary:
     if not points:
-        return {"total_count": 0.0, "average_per_day": 0.0, "last_day_value": None}
+        return EngagementSummary(total=0.0, average_per_day=0.0, last_day_value=None, health_score=0.0)
 
     total = sum(p.value for p in points)
     avg = total / len(points)
     last = points[-1].value
 
-    return {
-        "total_count": total,
-        "average_per_day": avg,
-        "last_day_value": last,
-    }
+    return EngagementSummary(
+        total=total,
+        average_per_day=avg,
+        last_day_value=last,
+        health_score=0.0,  # set by compute_engagement_health
+    )
 
 
-def compute_engagement_health(points: List[MetricSeriesPoint]) -> float:
+def compute_engagement_health(points: List[SeriesPoint]) -> float:
     """Return a deterministic 0-100 health score based on last value vs baseline average."""
     if not points:
         return 0.0
 
     totals = aggregate_signals(points)
-    baseline = totals["average_per_day"]
-    last_value = totals["last_day_value"]
+    baseline = totals.average_per_day
+    last_value = totals.last_day_value
 
     if baseline <= 0 or last_value is None:
         return 0.0

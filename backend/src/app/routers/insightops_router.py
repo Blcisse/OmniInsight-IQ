@@ -13,19 +13,15 @@ from ..services.insightops import (
     fetch_exec_summaries,
     fetch_kpis,
 )
-from ..services.insightops_analytics import (
-    DEFAULT_LOOKBACK_DAYS,
-    DEFAULT_ORG_ID,
-    MetricSeriesPoint,
-    compute_kpi_delta,
-    compute_rolling_average,
-    get_kpi_series,
+from ..schemas.insightops_analytics import (
+    Anomaly,
+    AnomalyResponse,
+    DeltaSummary,
+    EngagementSummary,
+    SeriesResponse,
 )
-from ..services.insightops_engagement import (
-    aggregate_signals,
-    compute_engagement_health,
-    get_signal_series,
-)
+from ..services.insightops_analytics import DEFAULT_LOOKBACK_DAYS, DEFAULT_ORG_ID, compute_kpi_delta, get_kpi_series
+from ..services.insightops_engagement import aggregate_signals, compute_engagement_health, get_signal_series
 from ..services.insightops_anomalies import get_anomalies
 
 router = APIRouter(prefix="/insightops", tags=["InsightOps"])
@@ -81,46 +77,6 @@ class ExecSummary(BaseModel):
 
     class Config:
         orm_mode = True
-
-
-class KpiSeriesResponse(BaseModel):
-    org_id: str
-    key: str
-    points: list[MetricSeriesPoint]
-
-    class Config:
-        orm_mode = True
-
-
-class KpiSummary(BaseModel):
-    latest_value: float | None
-    previous_value: float | None
-    absolute_delta: float | None
-    percent_delta: float | None
-    rolling_average_7d: float | None
-
-
-class EngagementSeriesResponse(BaseModel):
-    org_id: str
-    key: str
-    points: list[MetricSeriesPoint]
-
-    class Config:
-        orm_mode = True
-
-
-class EngagementSummary(BaseModel):
-    total_count: float
-    average_per_day: float
-    last_day_value: float | None
-    health_score: float
-
-
-class Anomaly(BaseModel):
-    type: str
-    severity: str
-    description: str
-    date: date
 
 
 @router.get("/health")
@@ -181,7 +137,7 @@ async def list_executive_summaries(
     return records
 
 
-@router.get("/analytics/kpis/series", response_model=KpiSeriesResponse)
+@router.get("/analytics/kpis/series", response_model=SeriesResponse)
 async def kpi_series(
     org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter KPIs"),
     metric_key: str = Query("revenue", description="KPI metric key"),
@@ -189,7 +145,7 @@ async def kpi_series(
     end_date: str | None = Query(None, description="Inclusive end date (YYYY-MM-DD)"),
     lookback_days: int = Query(DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"),
     db: AsyncSession = Depends(get_db),
-) -> KpiSeriesResponse:
+) -> SeriesResponse:
     try:
         series = await get_kpi_series(
             db=db,
@@ -201,10 +157,10 @@ async def kpi_series(
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-    return KpiSeriesResponse.model_validate(series)
+    return series
 
 
-@router.get("/analytics/kpis/summary", response_model=KpiSummary)
+@router.get("/analytics/kpis/summary", response_model=DeltaSummary)
 async def kpi_summary(
     org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter KPIs"),
     metric_key: str = Query("revenue", description="KPI metric key"),
@@ -212,7 +168,7 @@ async def kpi_summary(
     end_date: str | None = Query(None, description="Inclusive end date (YYYY-MM-DD)"),
     lookback_days: int = Query(DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"),
     db: AsyncSession = Depends(get_db),
-) -> KpiSummary:
+) -> DeltaSummary:
     try:
         series = await get_kpi_series(
             db=db,
@@ -225,19 +181,10 @@ async def kpi_summary(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
-    delta = compute_kpi_delta(series.points)
-    rolling_avg = compute_rolling_average(series.points, window=7)
-
-    return KpiSummary(
-        latest_value=delta["latest_value"],
-        previous_value=delta["previous_value"],
-        absolute_delta=delta["absolute_delta"],
-        percent_delta=delta["percent_delta"],
-        rolling_average_7d=rolling_avg,
-    )
+    return compute_kpi_delta(series.points)
 
 
-@router.get("/analytics/engagement/series", response_model=EngagementSeriesResponse)
+@router.get("/analytics/engagement/series", response_model=SeriesResponse)
 async def engagement_series(
     org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter engagement signals"),
     signal_key: str = Query("touches", description="Engagement signal key"),
@@ -245,7 +192,7 @@ async def engagement_series(
     end_date: str | None = Query(None, description="Inclusive end date (YYYY-MM-DD)"),
     lookback_days: int = Query(DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"),
     db: AsyncSession = Depends(get_db),
-) -> EngagementSeriesResponse:
+) -> SeriesResponse:
     try:
         series = await get_signal_series(
             db=db,
@@ -257,7 +204,7 @@ async def engagement_series(
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-    return EngagementSeriesResponse.model_validate(series)
+    return series
 
 
 @router.get("/analytics/engagement/summary", response_model=EngagementSummary)
@@ -285,14 +232,14 @@ async def engagement_summary(
     health = compute_engagement_health(series.points)
 
     return EngagementSummary(
-        total_count=aggregates["total_count"],
-        average_per_day=aggregates["average_per_day"],
-        last_day_value=aggregates["last_day_value"],
+        total=aggregates.total,
+        average_per_day=aggregates.average_per_day,
+        last_day_value=aggregates.last_day_value,
         health_score=health,
     )
 
 
-@router.get("/analytics/anomalies", response_model=list[Anomaly])
+@router.get("/analytics/anomalies", response_model=AnomalyResponse)
 async def analytics_anomalies(
     org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier"),
     metric_key: str | None = Query(None, description="Optional KPI metric key to analyze"),
@@ -301,7 +248,7 @@ async def analytics_anomalies(
     end_date: str | None = Query(None, description="Inclusive end date (YYYY-MM-DD)"),
     lookback_days: int = Query(DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"),
     db: AsyncSession = Depends(get_db),
-) -> list[Anomaly]:
+) -> AnomalyResponse:
     try:
         anomalies = await get_anomalies(
             db=db,
@@ -314,4 +261,4 @@ async def analytics_anomalies(
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-    return [Anomaly.model_validate(item) for item in anomalies]
+    return anomalies

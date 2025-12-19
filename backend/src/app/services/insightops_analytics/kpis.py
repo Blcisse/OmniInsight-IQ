@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .constants import ALLOWED_KPI_KEYS, DEFAULT_LOOKBACK_DAYS, DEFAULT_ORG_ID
 from .db import fetch_kpi_series
 from .time import default_window, parse_date
-from .types import MetricSeriesPoint, SeriesResponse
+from ..schemas.insightops_analytics import DeltaSummary, SeriesPoint, SeriesResponse
 
 
 async def get_kpi_series(
@@ -39,19 +39,20 @@ async def get_kpi_series(
         end_date=window_end,
     )
 
-    points = [MetricSeriesPoint(date=row["date"], value=float(row["value"])) for row in rows]
-    return SeriesResponse(org_id=org_id, key=metric_key, points=points)
+    points = [SeriesPoint(date=row["date"], value=float(row["value"])) for row in rows]
+    return SeriesResponse(org_id=org_id, key=metric_key, start_date=window_start, end_date=window_end, points=points)
 
 
-def compute_kpi_delta(points: List[MetricSeriesPoint]) -> dict:
+def compute_kpi_delta(points: List[SeriesPoint], rolling_avg_window: int = 7) -> DeltaSummary:
     """Compute latest vs previous deltas from a time-ordered series."""
     if not points:
-        return {
-            "latest_value": None,
-            "previous_value": None,
-            "absolute_delta": None,
-            "percent_delta": None,
-        }
+        return DeltaSummary(
+            latest_value=None,
+            previous_value=None,
+            absolute_delta=None,
+            percent_delta=None,
+            rolling_avg_7d_latest=None,
+        )
 
     latest = points[-1].value
     previous = points[-2].value if len(points) >= 2 else None
@@ -60,15 +61,18 @@ def compute_kpi_delta(points: List[MetricSeriesPoint]) -> dict:
     if previous not in (None, 0):
         percent_delta = (absolute_delta / previous) * 100  # type: ignore[arg-type]
 
-    return {
-        "latest_value": latest,
-        "previous_value": previous,
-        "absolute_delta": absolute_delta,
-        "percent_delta": percent_delta,
-    }
+    rolling_avg = compute_rolling_average(points, window=rolling_avg_window)
+
+    return DeltaSummary(
+        latest_value=latest,
+        previous_value=previous,
+        absolute_delta=absolute_delta,
+        percent_delta=percent_delta,
+        rolling_avg_7d_latest=rolling_avg,
+    )
 
 
-def compute_rolling_average(points: List[MetricSeriesPoint], window: int = 7) -> Optional[float]:
+def compute_rolling_average(points: List[SeriesPoint], window: int = 7) -> Optional[float]:
     """Return trailing average over the given window size."""
     if window <= 0:
         raise ValueError("window must be positive")

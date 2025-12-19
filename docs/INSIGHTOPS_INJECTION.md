@@ -28,3 +28,7 @@
 - **Voice/STT/TTS:** Deferred to CD8.
 - **Production infra:** No cloud provisioning or deployment hardening in this phase.
 - **Cross-domain coupling:** Only allowed once CD6 explicitly begins.
+
+## CD3 Analytics Contracts
+- API responses for InsightOps analytics are defined in `backend/src/app/schemas/insightops_analytics.py` (series, deltas, engagement summaries, anomalies).
+- Analytics routes live under `/insightops/analytics/...` and return these Pydantic schemas for UI consumption.
