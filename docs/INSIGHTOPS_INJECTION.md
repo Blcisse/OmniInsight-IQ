@@ -6,6 +6,7 @@
 - **Architecture proof:** Validates domain-first patterns (routing, foldering, contracts) that future domains can copy.
 
 ## Domain Isolation Rules
+- InsightOps Studio lives under `domains/insightops-studio/` with its own docs, schemas, analytics, dashboards, AI contracts, and data stubs.
 - InsightOps Studio lives under `src/domains/insightops-studio` with its own docs, schemas, analytics, dashboards, AI contracts, and data stubs.
 - Backend exposure is limited to the `/insightops` router namespace (no shared routes, no cross-domain coupling).
 - Frontend routes and navigation entries reference the InsightOps path explicitly; no mixing with other domain UIs.
