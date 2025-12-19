@@ -13,6 +13,17 @@ from ..services.insightops import (
     fetch_exec_summaries,
     fetch_kpis,
 )
+from ..services.insightops_analytics import (
+    DEFAULT_LOOKBACK_DAYS,
+    DEFAULT_ORG_ID,
+    MetricSeriesPoint,
+    SeriesResponse,
+    compute_kpi_delta,
+    compute_rolling_average,
+    get_kpi_series,
+)
+
+router = APIRouter(prefix="/insightops", tags=["InsightOps"])
 
 router = APIRouter(prefix="/insightops", tags=["InsightOps"])
 DEFAULT_ORG_ID = "demo_org"
@@ -68,6 +79,23 @@ class ExecSummary(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class KpiSeriesResponse(BaseModel):
+    org_id: str
+    key: str
+    points: list[MetricSeriesPoint]
+
+    class Config:
+        orm_mode = True
+
+
+class KpiSummary(BaseModel):
+    latest_value: float | None
+    previous_value: float | None
+    absolute_delta: float | None
+    percent_delta: float | None
+    rolling_average_7d: float | None
 from fastapi import APIRouter
 
 
@@ -130,3 +158,59 @@ async def list_executive_summaries(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     return records
+
+
+@router.get("/analytics/kpis/series", response_model=KpiSeriesResponse)
+async def kpi_series(
+    org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter KPIs"),
+    metric_key: str = Query("revenue", description="KPI metric key"),
+    start_date: str | None = Query(None, description="Inclusive start date (YYYY-MM-DD)"),
+    end_date: str | None = Query(None, description="Inclusive end date (YYYY-MM-DD)"),
+    lookback_days: int = Query(DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"),
+    db: AsyncSession = Depends(get_db),
+) -> KpiSeriesResponse:
+    try:
+        series = await get_kpi_series(
+            db=db,
+            org_id=org_id or DEFAULT_ORG_ID,
+            metric_key=metric_key,
+            start_date=start_date,
+            end_date=end_date,
+            lookback_days=lookback_days,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return KpiSeriesResponse.model_validate(series)
+
+
+@router.get("/analytics/kpis/summary", response_model=KpiSummary)
+async def kpi_summary(
+    org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter KPIs"),
+    metric_key: str = Query("revenue", description="KPI metric key"),
+    start_date: str | None = Query(None, description="Inclusive start date (YYYY-MM-DD)"),
+    end_date: str | None = Query(None, description="Inclusive end date (YYYY-MM-DD)"),
+    lookback_days: int = Query(DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"),
+    db: AsyncSession = Depends(get_db),
+) -> KpiSummary:
+    try:
+        series = await get_kpi_series(
+            db=db,
+            org_id=org_id or DEFAULT_ORG_ID,
+            metric_key=metric_key,
+            start_date=start_date,
+            end_date=end_date,
+            lookback_days=lookback_days,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    delta = compute_kpi_delta(series.points)
+    rolling_avg = compute_rolling_average(series.points, window=7)
+
+    return KpiSummary(
+        latest_value=delta["latest_value"],
+        previous_value=delta["previous_value"],
+        absolute_delta=delta["absolute_delta"],
+        percent_delta=delta["percent_delta"],
+        rolling_average_7d=rolling_avg,
+    )
