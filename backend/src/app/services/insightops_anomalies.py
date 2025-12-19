@@ -152,7 +152,7 @@ def compute_engagement_anomalies(points: List[SeriesPoint]) -> List[dict]:
 async def get_anomalies(
     db: AsyncSession,
     org_id: str = DEFAULT_ORG_ID,
-    metric_key: Optional[str] = None,
+    metric_key: Optional[str] = "revenue",
     signal_key: Optional[str] = None,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
@@ -160,18 +160,6 @@ async def get_anomalies(
 ) -> AnomalyResponse:
     if metric_key and signal_key:
         raise ValueError("Provide either metric_key or signal_key, not both.")
-    if metric_key:
-        if metric_key not in ALLOWED_KPI_KEYS:
-            raise ValueError(f"Unsupported metric_key '{metric_key}'. Allowed: {sorted(ALLOWED_KPI_KEYS)}")
-        points = await _load_kpi_points(
-            db=db,
-            org_id=org_id,
-            metric_key=metric_key,
-            start_date=start_date,
-            end_date=end_date,
-            lookback_days=lookback_days,
-        )
-        return AnomalyResponse(org_id=org_id, anomalies=[Anomaly.model_validate(a) for a in compute_kpi_anomalies(points)])
     if signal_key:
         if signal_key not in ALLOWED_SIGNAL_KEYS:
             raise ValueError(f"Unsupported signal_key '{signal_key}'. Allowed: {sorted(ALLOWED_SIGNAL_KEYS)}")
@@ -186,4 +174,16 @@ async def get_anomalies(
         return AnomalyResponse(
             org_id=org_id, anomalies=[Anomaly.model_validate(a) for a in compute_engagement_anomalies(points)]
         )
+    if metric_key:
+        if metric_key not in ALLOWED_KPI_KEYS:
+            raise ValueError(f"Unsupported metric_key '{metric_key}'. Allowed: {sorted(ALLOWED_KPI_KEYS)}")
+        points = await _load_kpi_points(
+            db=db,
+            org_id=org_id,
+            metric_key=metric_key,
+            start_date=start_date,
+            end_date=end_date,
+            lookback_days=lookback_days,
+        )
+        return AnomalyResponse(org_id=org_id, anomalies=[Anomaly.model_validate(a) for a in compute_kpi_anomalies(points)])
     raise ValueError("metric_key or signal_key is required to compute anomalies.")

@@ -13,19 +13,15 @@ from ..services.insightops import (
     fetch_exec_summaries,
     fetch_kpis,
 )
-from ..services.insightops_analytics import (
-    DEFAULT_LOOKBACK_DAYS,
-    DEFAULT_ORG_ID,
-    MetricSeriesPoint,
-    compute_kpi_delta,
-    compute_rolling_average,
-    get_kpi_series,
+from ..schemas.insightops_analytics import (
+    Anomaly,
+    AnomalyResponse,
+    DeltaSummary,
+    EngagementSummary,
+    SeriesResponse,
 )
-from ..services.insightops_engagement import (
-    aggregate_signals,
-    compute_engagement_health,
-    get_signal_series,
-)
+from ..services.insightops_analytics import DEFAULT_LOOKBACK_DAYS, DEFAULT_ORG_ID, compute_kpi_delta, get_kpi_series
+from ..services.insightops_engagement import aggregate_signals, compute_engagement_health, get_signal_series
 from ..services.insightops_anomalies import get_anomalies
 
 router = APIRouter(prefix="/insightops", tags=["InsightOps"])
@@ -246,18 +242,19 @@ async def engagement_summary(
 @router.get("/analytics/anomalies", response_model=AnomalyResponse)
 async def analytics_anomalies(
     org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier"),
-    metric_key: str | None = Query(None, description="Optional KPI metric key to analyze"),
-    signal_key: str | None = Query(None, description="Optional engagement signal key to analyze"),
+    metric_key: str | None = Query("revenue", description="Optional KPI metric key to analyze"),
+    signal_key: str | None = Query(None, description="Optional engagement signal key to analyze (overrides metric_key)"),
     start_date: str | None = Query(None, description="Inclusive start date (YYYY-MM-DD)"),
     end_date: str | None = Query(None, description="Inclusive end date (YYYY-MM-DD)"),
     lookback_days: int = Query(DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"),
     db: AsyncSession = Depends(get_db),
 ) -> AnomalyResponse:
+    metric_to_use = None if signal_key else metric_key
     try:
         anomalies = await get_anomalies(
             db=db,
             org_id=org_id or DEFAULT_ORG_ID,
-            metric_key=metric_key,
+            metric_key=metric_to_use,
             signal_key=signal_key,
             start_date=start_date,
             end_date=end_date,
