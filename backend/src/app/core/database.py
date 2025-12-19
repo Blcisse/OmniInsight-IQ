@@ -76,7 +76,7 @@ async def create_all_tables() -> None:
     Create all tables defined in Base metadata.
 
     This is mainly for development and testing.
-    For production, prefer migrations (Alembic).
+    For production, prefer managed migration scripts.
     """
     # Import models to register them with Base metadata
     from ..models import Base as _Base  # noqa: F401
@@ -86,6 +86,9 @@ async def create_all_tables() -> None:
         ConversionORM,
         ProductORM,
         UserORM,
+        IoKpiDailyORM,
+        IoEngagementSignalDailyORM,
+        IoExecSummaryORM,
     )
 
     async with engine.begin() as conn:
