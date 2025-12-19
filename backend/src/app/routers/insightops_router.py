@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from decimal import Decimal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -19,15 +18,19 @@ from ..services.insightops_analytics import (
     DEFAULT_ORG_ID,
     MetricSeriesPoint,
     SeriesResponse,
+)
+from ..services.insightops_analytics.kpis import (
     compute_kpi_delta,
     compute_rolling_average,
     get_kpi_series,
 )
+from ..services.insightops_engagement import (
+    aggregate_signals,
+    compute_engagement_health,
+    get_signal_series,
+)
 
 router = APIRouter(prefix="/insightops", tags=["InsightOps"])
-
-router = APIRouter(prefix="/insightops", tags=["InsightOps"])
-DEFAULT_ORG_ID = "demo_org"
 
 
 class KpiDaily(BaseModel):
@@ -79,8 +82,7 @@ class ExecSummary(BaseModel):
     updated_at: datetime
 
     class Config:
-<<<<<<< Updated upstream
-        orm_mode = True
+        from_attributes = True
 
 
 class KpiSeriesResponse(BaseModel):
@@ -89,7 +91,7 @@ class KpiSeriesResponse(BaseModel):
     points: list[MetricSeriesPoint]
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class KpiSummary(BaseModel):
@@ -98,13 +100,22 @@ class KpiSummary(BaseModel):
     absolute_delta: float | None
     percent_delta: float | None
     rolling_average_7d: float | None
-from fastapi import APIRouter
 
 
-router = APIRouter(prefix="/insightops", tags=["InsightOps"])
-=======
+class EngagementSeriesResponse(BaseModel):
+    org_id: str
+    key: str
+    points: list[MetricSeriesPoint]
+
+    class Config:
         from_attributes = True
->>>>>>> Stashed changes
+
+
+class EngagementSummary(BaseModel):
+    total_count: float
+    average_per_day: float
+    last_day_value: float | None
+    health_score: float
 
 
 @router.get("/health")
@@ -124,8 +135,6 @@ async def list_kpis(
         records = await fetch_kpis(db, org_id=org_id, start_date=start_date, end_date=end_date, metric_key=metric_key)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(exc)}")
     return records
 
 
@@ -220,4 +229,59 @@ async def kpi_summary(
         absolute_delta=delta["absolute_delta"],
         percent_delta=delta["percent_delta"],
         rolling_average_7d=rolling_avg,
+    )
+
+
+@router.get("/analytics/engagement/series", response_model=EngagementSeriesResponse)
+async def engagement_series(
+    org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter engagement signals"),
+    signal_key: str = Query("touches", description="Engagement signal key"),
+    start_date: str | None = Query(None, description="Inclusive start date (YYYY-MM-DD)"),
+    end_date: str | None = Query(None, description="Inclusive end date (YYYY-MM-DD)"),
+    lookback_days: int = Query(DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"),
+    db: AsyncSession = Depends(get_db),
+) -> EngagementSeriesResponse:
+    try:
+        series = await get_signal_series(
+            db=db,
+            org_id=org_id or DEFAULT_ORG_ID,
+            signal_key=signal_key,
+            start_date=start_date,
+            end_date=end_date,
+            lookback_days=lookback_days,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return EngagementSeriesResponse.model_validate(series)
+
+
+@router.get("/analytics/engagement/summary", response_model=EngagementSummary)
+async def engagement_summary(
+    org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter engagement signals"),
+    signal_key: str = Query("touches", description="Engagement signal key"),
+    start_date: str | None = Query(None, description="Inclusive start date (YYYY-MM-DD)"),
+    end_date: str | None = Query(None, description="Inclusive end date (YYYY-MM-DD)"),
+    lookback_days: int = Query(DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"),
+    db: AsyncSession = Depends(get_db),
+) -> EngagementSummary:
+    try:
+        series = await get_signal_series(
+            db=db,
+            org_id=org_id or DEFAULT_ORG_ID,
+            signal_key=signal_key,
+            start_date=start_date,
+            end_date=end_date,
+            lookback_days=lookback_days,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    aggregates = aggregate_signals(series.points)
+    health = compute_engagement_health(series.points)
+
+    return EngagementSummary(
+        total_count=aggregates["total_count"],
+        average_per_day=aggregates["average_per_day"],
+        last_day_value=aggregates["last_day_value"],
+        health_score=health,
     )
