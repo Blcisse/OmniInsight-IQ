@@ -45,6 +45,7 @@ export default function Sidebar() {
       { href: "/dashboard/nutrition", label: "Nutrition Intelligence" },
       { href: "/dashboard/sales", label: "Sales" },
       { href: "/dashboard/ai-insights", label: "AI Insights" },
+      { href: "/insightops", label: "InsightOps Studio" },
     ],
     []
   );
