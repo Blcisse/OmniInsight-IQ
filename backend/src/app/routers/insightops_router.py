@@ -25,6 +25,9 @@ from ..services.insightops_analytics import (
 
 router = APIRouter(prefix="/insightops", tags=["InsightOps"])
 
+router = APIRouter(prefix="/insightops", tags=["InsightOps"])
+DEFAULT_ORG_ID = "demo_org"
+
 
 class KpiDaily(BaseModel):
     id: UUID
@@ -93,6 +96,10 @@ class KpiSummary(BaseModel):
     absolute_delta: float | None
     percent_delta: float | None
     rolling_average_7d: float | None
+from fastapi import APIRouter
+
+
+router = APIRouter(prefix="/insightops", tags=["InsightOps"])
 
 
 @router.get("/health")
