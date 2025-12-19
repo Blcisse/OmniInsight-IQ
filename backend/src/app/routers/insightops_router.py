@@ -17,9 +17,6 @@ from ..services.insightops_analytics import (
     DEFAULT_LOOKBACK_DAYS,
     DEFAULT_ORG_ID,
     MetricSeriesPoint,
-    SeriesResponse,
-)
-from ..services.insightops_analytics.kpis import (
     compute_kpi_delta,
     compute_rolling_average,
     get_kpi_series,
@@ -29,6 +26,7 @@ from ..services.insightops_engagement import (
     compute_engagement_health,
     get_signal_series,
 )
+from ..services.insightops_anomalies import get_anomalies
 
 router = APIRouter(prefix="/insightops", tags=["InsightOps"])
 
@@ -49,7 +47,7 @@ class KpiDaily(BaseModel):
     updated_at: datetime
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class EngagementSignalDaily(BaseModel):
@@ -67,7 +65,7 @@ class EngagementSignalDaily(BaseModel):
     updated_at: datetime
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class ExecSummary(BaseModel):
@@ -82,7 +80,7 @@ class ExecSummary(BaseModel):
     updated_at: datetime
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class KpiSeriesResponse(BaseModel):
@@ -91,7 +89,7 @@ class KpiSeriesResponse(BaseModel):
     points: list[MetricSeriesPoint]
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class KpiSummary(BaseModel):
@@ -108,7 +106,7 @@ class EngagementSeriesResponse(BaseModel):
     points: list[MetricSeriesPoint]
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class EngagementSummary(BaseModel):
@@ -116,6 +114,13 @@ class EngagementSummary(BaseModel):
     average_per_day: float
     last_day_value: float | None
     health_score: float
+
+
+class Anomaly(BaseModel):
+    type: str
+    severity: str
+    description: str
+    date: date
 
 
 @router.get("/health")
@@ -285,3 +290,28 @@ async def engagement_summary(
         last_day_value=aggregates["last_day_value"],
         health_score=health,
     )
+
+
+@router.get("/analytics/anomalies", response_model=list[Anomaly])
+async def analytics_anomalies(
+    org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier"),
+    metric_key: str | None = Query(None, description="Optional KPI metric key to analyze"),
+    signal_key: str | None = Query(None, description="Optional engagement signal key to analyze"),
+    start_date: str | None = Query(None, description="Inclusive start date (YYYY-MM-DD)"),
+    end_date: str | None = Query(None, description="Inclusive end date (YYYY-MM-DD)"),
+    lookback_days: int = Query(DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"),
+    db: AsyncSession = Depends(get_db),
+) -> list[Anomaly]:
+    try:
+        anomalies = await get_anomalies(
+            db=db,
+            org_id=org_id or DEFAULT_ORG_ID,
+            metric_key=metric_key,
+            signal_key=signal_key,
+            start_date=start_date,
+            end_date=end_date,
+            lookback_days=lookback_days,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return [Anomaly.model_validate(item) for item in anomalies]
