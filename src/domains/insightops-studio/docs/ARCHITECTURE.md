@@ -43,3 +43,5 @@ InsightOps Studio operates as a domain-isolated module within OmniInsight IQ. Th
   - `analytics/types.py`: Pydantic models for date windows and series responses to avoid untyped dicts.
   - `analytics/db.py`: Async SQLAlchemy queries against `io_kpi_daily` and `io_engagement_signal_daily`, ordered by date and scoped by org/key.
   - `analytics/__init__.py`: Convenience exports to keep imports concise across services.
+- **Pattern**: Follow the existing platform approach of SQLAlchemy ORM models with Alembic migrations (see `backend/src/app/core/database.py` and `backend/migrations/`). This keeps InsightOps aligned with async PostgreSQL usage already wired in the app.
+- **Naming convention (locked)**: Use the `io_` table prefix for InsightOps tables (e.g., `io_kpi_daily`, `io_engagement_signal`). This preserves isolation without creating a separate Postgres schema and avoids cross-domain name collisions.
