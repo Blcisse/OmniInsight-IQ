@@ -7,6 +7,11 @@ from .sales import SaleORM  # noqa: F401
 from .marketing import CampaignORM, ConversionORM  # noqa: F401
 from .products import ProductORM  # noqa: F401
 from .user import UserORM  # noqa: F401
+from .insightops import (  # noqa: F401
+    IoEngagementSignalDailyORM,
+    IoExecSummaryORM,
+    IoKpiDailyORM,
+)
 
 __all__ = [
     "Base",
@@ -15,5 +20,8 @@ __all__ = [
     "ConversionORM",
     "ProductORM",
     "UserORM",
+    "IoKpiDailyORM",
+    "IoEngagementSignalDailyORM",
+    "IoExecSummaryORM",
 ]
 
