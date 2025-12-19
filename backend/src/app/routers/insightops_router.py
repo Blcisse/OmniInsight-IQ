@@ -68,6 +68,10 @@ class ExecSummary(BaseModel):
 
     class Config:
         orm_mode = True
+from fastapi import APIRouter
+
+
+router = APIRouter(prefix="/insightops", tags=["InsightOps"])
 
 
 @router.get("/health")
