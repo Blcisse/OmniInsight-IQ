@@ -13,15 +13,19 @@ from ..services.insightops import (
     fetch_exec_summaries,
     fetch_kpis,
 )
-from ..schemas.insightops_analytics import (
-    Anomaly,
-    AnomalyResponse,
-    DeltaSummary,
-    EngagementSummary,
-    SeriesResponse,
+from ..services.insightops_analytics import (
+    DEFAULT_LOOKBACK_DAYS,
+    DEFAULT_ORG_ID,
+    MetricSeriesPoint,
+    compute_kpi_delta,
+    compute_rolling_average,
+    get_kpi_series,
 )
-from ..services.insightops_analytics import DEFAULT_LOOKBACK_DAYS, DEFAULT_ORG_ID, compute_kpi_delta, get_kpi_series
-from ..services.insightops_engagement import aggregate_signals, compute_engagement_health, get_signal_series
+from ..services.insightops_engagement import (
+    aggregate_signals,
+    compute_engagement_health,
+    get_signal_series,
+)
 from ..services.insightops_anomalies import get_anomalies
 
 router = APIRouter(prefix="/insightops", tags=["InsightOps"])
