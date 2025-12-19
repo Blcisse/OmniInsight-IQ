@@ -26,7 +26,6 @@ class IoKpiDailyORM(Base):
     segment: Mapped[str | None] = mapped_column(String, nullable=True)
     channel: Mapped[str | None] = mapped_column(String, nullable=True)
     product: Mapped[str | None] = mapped_column(String, nullable=True)
-    dimensions: Mapped[str | None] = mapped_column(Text, nullable=True)
     source: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -50,7 +49,6 @@ class IoEngagementSignalDailyORM(Base):
     segment: Mapped[str | None] = mapped_column(String, nullable=True)
     channel: Mapped[str | None] = mapped_column(String, nullable=True)
     product: Mapped[str | None] = mapped_column(String, nullable=True)
-    dimensions: Mapped[str | None] = mapped_column(Text, nullable=True)
     source: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

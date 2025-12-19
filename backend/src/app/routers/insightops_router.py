@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from decimal import Decimal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -45,7 +46,7 @@ class KpiDaily(BaseModel):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class EngagementSignalDaily(BaseModel):
@@ -63,7 +64,7 @@ class EngagementSignalDaily(BaseModel):
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ExecSummary(BaseModel):
@@ -78,6 +79,7 @@ class ExecSummary(BaseModel):
     updated_at: datetime
 
     class Config:
+<<<<<<< Updated upstream
         orm_mode = True
 
 
@@ -100,6 +102,9 @@ from fastapi import APIRouter
 
 
 router = APIRouter(prefix="/insightops", tags=["InsightOps"])
+=======
+        from_attributes = True
+>>>>>>> Stashed changes
 
 
 @router.get("/health")
@@ -119,6 +124,8 @@ async def list_kpis(
         records = await fetch_kpis(db, org_id=org_id, start_date=start_date, end_date=end_date, metric_key=metric_key)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(exc)}")
     return records
 
 
