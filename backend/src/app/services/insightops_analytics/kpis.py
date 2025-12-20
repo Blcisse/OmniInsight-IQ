@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .constants import ALLOWED_KPI_KEYS, DEFAULT_LOOKBACK_DAYS, DEFAULT_ORG_ID
 from .db import fetch_kpi_series
 from .time import default_window, parse_date
-from ..schemas.insightops_analytics import DeltaSummary, SeriesPoint, SeriesResponse
+from ...schemas.insightops_analytics import DeltaSummary, SeriesPoint, SeriesResponse
 
 
 async def get_kpi_series(

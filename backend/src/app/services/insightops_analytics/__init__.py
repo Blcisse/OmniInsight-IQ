@@ -12,5 +12,6 @@ from .constants import (  # noqa: F401
     DEFAULT_ORG_ID,
 )
 from .db import fetch_kpi_series, fetch_signal_series  # noqa: F401
+from .kpis import compute_kpi_delta, get_kpi_series  # noqa: F401
 from .time import default_window, parse_date  # noqa: F401
 from .types import DateWindow, MetricSeriesPoint, SeriesResponse  # noqa: F401
