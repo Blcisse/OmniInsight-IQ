@@ -20,3 +20,6 @@ API Gateway & Integration Layer
 Authentication & Access Control
 System Monitoring & Logging
 Frontend UI Components Library
+
+📄 Documentation
+- [InsightOps Studio Injection](docs/INSIGHTOPS_INJECTION.md)
