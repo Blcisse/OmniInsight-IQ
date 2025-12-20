@@ -84,7 +84,7 @@ async def insightops_health() -> dict:
     return {"domain": "insightops-studio", "status": "ok"}
 
 
-@router.get("/analytics/kpis/summary", response_model=list[KpiDaily])
+@router.get("/kpis", response_model=list[KpiDaily])
 async def list_kpis(
     org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter KPIs"),
     start_date: date | None = Query(None, description="Inclusive start date (YYYY-MM-DD)"),
@@ -99,7 +99,7 @@ async def list_kpis(
     return records
 
 
-@router.get("/analytics/engagement/signals", response_model=list[EngagementSignalDaily])
+@router.get("/engagement", response_model=list[EngagementSignalDaily])
 async def list_engagement_signals(
     org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter engagement signals"),
     start_date: date | None = Query(None, description="Inclusive start date (YYYY-MM-DD)"),
@@ -116,7 +116,7 @@ async def list_engagement_signals(
     return records
 
 
-@router.get("/analytics/executive-summaries", response_model=list[ExecSummary])
+@router.get("/executive-summaries", response_model=list[ExecSummary])
 async def list_executive_summaries(
     org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter summaries"),
     period_start: date | None = Query(None, description="Inclusive start of summary period (YYYY-MM-DD)"),
@@ -160,7 +160,7 @@ async def kpi_series(
     return series
 
 
-@router.get("/analytics/kpis/delta", response_model=DeltaSummary)
+@router.get("/analytics/kpis/summary", response_model=DeltaSummary)
 async def kpi_summary(
     org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter KPIs"),
     metric_key: str = Query("revenue", description="KPI metric key"),
