@@ -1,3 +1,4 @@
+// InsightOps frontend uses Next.js API proxy routes under /api/insightops/* to avoid CORS and keep backend base URL configurable.
 import apiClient from "../apiClient";
 import {
   Anomaly,
@@ -37,7 +38,7 @@ export async function getKpiSummary(
   { orgId = "demo_org", metricKey = "revenue" }: KpiSummaryParams = {}
 ): Promise<KpiSummaryResponse> {
   try {
-    const response = await apiClient.get<KpiSummaryResponse>("/insightops/analytics/kpis/summary", {
+    const response = await apiClient.get<KpiSummaryResponse>("/api/insightops/analytics/kpis/summary", {
       params: withDefaults({ org_id: orgId, metric_key: metricKey }),
     });
     return response.data;
@@ -50,7 +51,7 @@ export async function getEngagementSummary(
   { orgId = "demo_org", signalKey = "touches" }: EngagementSummaryParams = {}
 ): Promise<EngagementSummaryResponse> {
   try {
-    const response = await apiClient.get<EngagementSummaryResponse>("/insightops/analytics/engagement/summary", {
+    const response = await apiClient.get<EngagementSummaryResponse>("/api/insightops/analytics/engagement/summary", {
       params: withDefaults({ org_id: orgId, signal_key: signalKey }),
     });
     return response.data;
@@ -63,7 +64,7 @@ export async function getAnomalies(
   { orgId = "demo_org", metricKey, signalKey }: AnomaliesParams = {}
 ): Promise<Anomaly[]> {
   try {
-    const response = await apiClient.get<AnomaliesResponse>("/insightops/analytics/anomalies", {
+    const response = await apiClient.get<AnomaliesResponse>("/api/insightops/analytics/anomalies", {
       params: withDefaults({ org_id: orgId, metric_key: metricKey, signal_key: signalKey }),
     });
     const payload = response.data;
