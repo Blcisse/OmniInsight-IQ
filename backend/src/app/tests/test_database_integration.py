@@ -1,23 +1,19 @@
 import asyncio
 import os
 import pytest
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from src.app.core.database import engine, AsyncSessionLocal
 from src.app.models import Base, ProductORM, SaleORM, CampaignORM
 
 
 @pytest.mark.asyncio
-async def test_crud_sales_and_queries():
-    # Create schema (for test DB)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
+async def test_crud_sales_and_queries(db_setup):
     # Insert a product and sales rows
     async with AsyncSessionLocal() as session:
         # Ensure clean slate
-        await session.execute("DELETE FROM sales")
-        await session.execute("DELETE FROM products")
+        await session.execute(text("DELETE FROM sales"))
+        await session.execute(text("DELETE FROM products"))
         await session.commit()
 
         p = ProductORM(name="Test Product", category="Widgets", price=9.99, stock=100)
@@ -45,12 +41,9 @@ async def test_crud_sales_and_queries():
 
 
 @pytest.mark.asyncio
-async def test_campaign_crud():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
+async def test_campaign_crud(db_setup):
     async with AsyncSessionLocal() as session:
-        await session.execute("DELETE FROM campaigns")
+        await session.execute(text("DELETE FROM campaigns"))
         await session.commit()
 
         c = CampaignORM(campaign_name="Black Friday", channel="Search", budget=1000.0, spend=250.0, impressions=10000, clicks=500, roi=3.2)
