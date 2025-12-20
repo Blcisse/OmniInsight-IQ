@@ -11,8 +11,14 @@ type Health = {
   status?: string;
 };
 
+type KpiSummaries = {
+  revenue?: KpiSummaryResponse | null;
+  pipeline?: KpiSummaryResponse | null;
+  win_rate?: KpiSummaryResponse | null;
+};
+
 type Props = {
-  kpiSummary: KpiSummaryResponse | null;
+  kpiSummaries: KpiSummaries;
   engagementSummary: EngagementSummaryResponse | null;
   anomalies: Anomaly[] | null;
   health: Health | null;
@@ -30,15 +36,15 @@ const displayNumber = (value: number | null | undefined, options?: Intl.NumberFo
   return value.toLocaleString(undefined, options);
 };
 
-export default function ExecutiveDashboard({ kpiSummary, engagementSummary, anomalies, health }: Props) {
-  const kpiCards = [
-    { label: "Revenue", value: kpiSummary?.latest_value },
-    { label: "Pipeline", value: kpiSummary?.latest_value },
-    { label: "Win Rate", value: kpiSummary?.latest_value },
+export default function ExecutiveDashboard({ kpiSummaries, engagementSummary, anomalies, health }: Props) {
+  const metricCards: { key: keyof KpiSummaries; label: string }[] = [
+    { key: "revenue", label: "Revenue" },
+    { key: "pipeline", label: "Pipeline" },
+    { key: "win_rate", label: "Win Rate" },
   ];
 
-  const deltaText = kpiSummary ? formatDelta(kpiSummary) : "—";
-  const rolling = kpiSummary?.rolling_average_7d_latest ?? kpiSummary?.rolling_average_7d ?? null;
+  const firstSummary = kpiSummaries.revenue ?? kpiSummaries.pipeline ?? kpiSummaries.win_rate ?? null;
+  const deltaText = firstSummary ? formatDelta(firstSummary) : "—";
 
   const engagementHealthScore = engagementSummary?.health_score ?? 0;
   const engagementLabel = labelForHealthScore(engagementHealthScore);
@@ -84,18 +90,24 @@ export default function ExecutiveDashboard({ kpiSummary, engagementSummary, anom
 
       <div style={{ display: "grid", gap: "0.75rem" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.75rem" }}>
-          {kpiCards.map((card) => (
-            <KPICard
-              key={card.label}
-              label={card.label}
-              value={displayNumber(card.value)}
-              delta={kpiSummary?.percent_delta ?? undefined}
-            />
-          ))}
+          {metricCards.map((card) => {
+            const summary = kpiSummaries[card.key];
+            const rolling = summary?.rolling_average_7d_latest ?? summary?.rolling_average_7d ?? null;
+            return (
+              <div key={card.label} style={{ display: "grid", gap: 4 }}>
+                <KPICard
+                  label={card.label}
+                  value={displayNumber(summary?.latest_value)}
+                  delta={summary?.percent_delta ?? undefined}
+                />
+                <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+                  Rolling 7d avg: {displayNumber(rolling)}
+                </div>
+              </div>
+            );
+          })}
         </div>
-        <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>
-          Delta: {deltaText} · Rolling 7d avg: {displayNumber(rolling)}
-        </div>
+        <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>Delta: {deltaText}</div>
       </div>
 
       <div
