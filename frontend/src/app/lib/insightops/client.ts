@@ -5,6 +5,7 @@ import {
   AnomaliesResponse,
   EngagementSummaryResponse,
   KpiSummaryResponse,
+  SeriesPoint,
 } from "./types";
 
 type KpiSummaryParams = {
@@ -21,6 +22,18 @@ type AnomaliesParams = {
   orgId?: string;
   metricKey?: string;
   signalKey?: string;
+};
+
+type KpiSeriesParams = {
+  orgId?: string;
+  metricKey?: string;
+  lookbackDays?: number;
+};
+
+type EngagementSeriesParams = {
+  orgId?: string;
+  signalKey?: string;
+  lookbackDays?: number;
 };
 
 const withDefaults = <T extends Record<string, unknown>>(params: T) => ({
@@ -55,6 +68,50 @@ export async function getEngagementSummary(
       params: withDefaults({ org_id: orgId, signal_key: signalKey }),
     });
     return response.data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+const normalizeSeries = (data: any): SeriesPoint[] => {
+  if (Array.isArray(data)) {
+    return data as SeriesPoint[];
+  }
+  if (data?.points && Array.isArray(data.points)) {
+    return data.points as SeriesPoint[];
+  }
+  return [];
+};
+
+export async function getKpiSeries(
+  { orgId = "demo_org", metricKey = "revenue", lookbackDays = 14 }: KpiSeriesParams = {}
+): Promise<SeriesPoint[]> {
+  try {
+    const response = await apiClient.get("/api/insightops/analytics/kpis/series", {
+      params: withDefaults({
+        org_id: orgId,
+        metric_key: metricKey,
+        lookback_days: lookbackDays,
+      }),
+    });
+    return normalizeSeries(response.data);
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function getEngagementSeries(
+  { orgId = "demo_org", signalKey = "touches", lookbackDays = 14 }: EngagementSeriesParams = {}
+): Promise<SeriesPoint[]> {
+  try {
+    const response = await apiClient.get("/api/insightops/analytics/engagement/series", {
+      params: withDefaults({
+        org_id: orgId,
+        signal_key: signalKey,
+        lookback_days: lookbackDays,
+      }),
+    });
+    return normalizeSeries(response.data);
   } catch (error) {
     handleError(error);
   }
