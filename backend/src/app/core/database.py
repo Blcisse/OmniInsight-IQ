@@ -29,13 +29,16 @@ if not DATABASE_URL:
 # ---------------------------------------------------------
 # Enable NullPool during tests to avoid asyncpg concurrency issues.
 use_null_pool = os.getenv("SQLALCHEMY_NULLPOOL", "false").lower() in {"1", "true", "yes", "on"}
+is_sqlite = DATABASE_URL.startswith("sqlite+aiosqlite")
 
 engine = create_async_engine(
     DATABASE_URL,
     echo=os.getenv("SQLALCHEMY_ECHO", "false").lower() in {"1", "true", "yes", "on"},
     future=True,
-    poolclass=NullPool if use_null_pool else None,
+    poolclass=NullPool if use_null_pool or is_sqlite else None,
+    connect_args={"check_same_thread": False} if is_sqlite else None,
 )
+async_engine = engine  # backward compatibility for tests referencing async_engine
 
 
 # ---------------------------------------------------------
@@ -76,7 +79,7 @@ async def create_all_tables() -> None:
     Create all tables defined in Base metadata.
 
     This is mainly for development and testing.
-    For production, prefer migrations (Alembic).
+    For production, prefer managed migration scripts.
     """
     # Import models to register them with Base metadata
     from ..models import Base as _Base  # noqa: F401
@@ -86,6 +89,9 @@ async def create_all_tables() -> None:
         ConversionORM,
         ProductORM,
         UserORM,
+        IoKpiDailyORM,
+        IoEngagementSignalDailyORM,
+        IoExecSummaryORM,
     )
 
     async with engine.begin() as conn:

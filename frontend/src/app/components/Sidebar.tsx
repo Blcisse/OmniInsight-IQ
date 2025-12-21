@@ -4,6 +4,12 @@ import React, { useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
+
+type NavItem = {
+  href: string;
+  label: string;
+  exact?: boolean;
+};
 const linkStyle: React.CSSProperties = {
   display: "block",
   padding: "0.75rem 1rem",
@@ -32,10 +38,19 @@ export default function Sidebar() {
   /** -------------------------
    * Active link highlighting
    * ------------------------- */
-  const isActive = (path: string) =>
-    path === "/dashboard" ? pathname === "/dashboard" || pathname === "/" : pathname?.startsWith(path);
+  const isActive = ({ href, exact }: NavItem) => {
+    if (href === "/dashboard") {
+      return pathname === "/dashboard" || pathname === "/";
+    }
 
-  const navItems = useMemo(
+    if (exact) {
+      return pathname === href;
+    }
+
+    return pathname?.startsWith(href);
+  };
+
+  const navItems = useMemo<NavItem[]>(
     () => [
       { href: "/dashboard", label: "Dashboard" },
       { href: "/dashboard/analytics", label: "Analytics" },
@@ -45,6 +60,9 @@ export default function Sidebar() {
       { href: "/dashboard/nutrition", label: "Nutrition Intelligence" },
       { href: "/dashboard/sales", label: "Sales" },
       { href: "/dashboard/ai-insights", label: "AI Insights" },
+      { href: "/insightops", label: "InsightOps Studio (Executive)", exact: true },
+      { href: "/insightops/analyst", label: "InsightOps Studio (Analyst)" },
+      { href: "/insightops/brief", label: "InsightOps Studio (Brief)", exact: true },
     ],
     []
   );
@@ -80,8 +98,9 @@ export default function Sidebar() {
           Navigation
         </motion.h2>
 
-        {navItems.map(({ href, label }) => {
-          const active = isActive(href);
+        {navItems.map((item) => {
+          const { href, label } = item;
+          const active = isActive(item);
           return (
             <motion.div
               key={href}
