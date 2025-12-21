@@ -1,32 +1,36 @@
-# Database & Migrations
-alembic==1.17.1
-sqlalchemy>=2.0.0
-asyncpg>=0.29.0
-psycopg2-binary>=2.9.0
+# Core Backend & API
+fastapi==0.116.1
+uvicorn==0.38.0
+starlette==0.47.3
+orjson==3.11.4
+pydantic==2.11.7
+python-dotenv==1.1.1
+pydantic-settings==2.2.1
 
-# Web Framework
-fastapi>=0.104.0
-uvicorn[standard]>=0.24.0
-pydantic>=2.0.0
+# Database
+sqlalchemy==2.0.43
 
-# Caching & Storage
-redis>=5.0.0
-boto3>=1.28.0
+# HTTP / Utility
+httpx==0.28.1
+requests==2.32.4
+tenacity==9.1.2
+pyyaml==6.0.2
 
-# Data Processing
-pandas>=2.0.0
-numpy>=1.24.0
+# Data / Analytics (lightweight)
+pandas==2.2.3
+numpy==2.3.2
+scipy==1.16.1
+scikit-learn==1.7.1
+joblib==1.5.1
 
-# Machine Learning (optional but likely used)
-scikit-learn>=1.3.0
+# Caching (optional, but low overhead if you already use it)
+redis==7.0.1
 
-# Authentication & Security
-python-jose[cryptography]>=3.3.0
-passlib[bcrypt]>=1.7.4
-python-multipart>=0.0.6
-email-validator>=2.0.0
+# Parsing / Docs (optional; keep only if used)
+beautifulsoup4==4.13.4
+pypdf==6.0.0
 
-# Testing (optional)
-pytest>=7.4.0
-pytest-asyncio>=0.21.0
+# Logging / Observability (keep only what you actively use)
+structlog==25.5.0
+coloredlogs==15.0.1
 
