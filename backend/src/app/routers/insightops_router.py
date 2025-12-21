@@ -8,21 +8,9 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.database import get_db
-from ..services.insightops import (
-    fetch_engagement_signals,
-    fetch_exec_summaries,
-    fetch_kpis,
-)
-from ..schemas.insightops_analytics import (
-    Anomaly,
-    AnomalyResponse,
-    DeltaSummary,
-    EngagementSummary,
-    SeriesResponse,
-)
-from ..services.insightops_analytics import DEFAULT_LOOKBACK_DAYS, DEFAULT_ORG_ID, compute_kpi_delta, get_kpi_series
-from ..services.insightops_engagement import aggregate_signals, compute_engagement_health, get_signal_series
-from ..services.insightops_anomalies import get_anomalies
+from ..services import insightops_analytics, insightops_anomalies, insightops_engagement
+from ..services.insightops import fetch_engagement_signals, fetch_exec_summaries, fetch_kpis
+from ..schemas.insightops_analytics import Anomaly, AnomalyResponse, DeltaSummary, EngagementSummary, SeriesResponse
 
 router = APIRouter(prefix="/insightops", tags=["InsightOps"])
 
@@ -86,7 +74,9 @@ async def insightops_health() -> dict:
 
 @router.get("/kpis", response_model=list[KpiDaily])
 async def list_kpis(
-    org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter KPIs"),
+    org_id: str = Query(
+        insightops_analytics.DEFAULT_ORG_ID, description="Organization identifier to filter KPIs"
+    ),
     start_date: date | None = Query(None, description="Inclusive start date (YYYY-MM-DD)"),
     end_date: date | None = Query(None, description="Inclusive end date (YYYY-MM-DD)"),
     metric_key: str | None = Query(None, description="Filter to a single KPI metric_key"),
@@ -101,7 +91,9 @@ async def list_kpis(
 
 @router.get("/engagement", response_model=list[EngagementSignalDaily])
 async def list_engagement_signals(
-    org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter engagement signals"),
+    org_id: str = Query(
+        insightops_analytics.DEFAULT_ORG_ID, description="Organization identifier to filter engagement signals"
+    ),
     start_date: date | None = Query(None, description="Inclusive start date (YYYY-MM-DD)"),
     end_date: date | None = Query(None, description="Inclusive end date (YYYY-MM-DD)"),
     signal_key: str | None = Query(None, description="Filter to a single engagement signal_key"),
@@ -118,7 +110,9 @@ async def list_engagement_signals(
 
 @router.get("/executive-summaries", response_model=list[ExecSummary])
 async def list_executive_summaries(
-    org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter summaries"),
+    org_id: str = Query(
+        insightops_analytics.DEFAULT_ORG_ID, description="Organization identifier to filter summaries"
+    ),
     period_start: date | None = Query(None, description="Inclusive start of summary period (YYYY-MM-DD)"),
     period_end: date | None = Query(None, description="Inclusive end of summary period (YYYY-MM-DD)"),
     summary_type: str | None = Query(None, description="Optional summary type (e.g., manager, board)"),
@@ -139,17 +133,21 @@ async def list_executive_summaries(
 
 @router.get("/analytics/kpis/series", response_model=SeriesResponse)
 async def kpi_series(
-    org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter KPIs"),
+    org_id: str = Query(
+        insightops_analytics.DEFAULT_ORG_ID, description="Organization identifier to filter KPIs"
+    ),
     metric_key: str = Query("revenue", description="KPI metric key"),
     start_date: str | None = Query(None, description="Inclusive start date (YYYY-MM-DD)"),
     end_date: str | None = Query(None, description="Inclusive end date (YYYY-MM-DD)"),
-    lookback_days: int = Query(DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"),
+    lookback_days: int = Query(
+        insightops_analytics.DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"
+    ),
     db: AsyncSession = Depends(get_db),
 ) -> SeriesResponse:
     try:
-        series = await get_kpi_series(
+        series = await insightops_analytics.get_kpi_series(
             db=db,
-            org_id=org_id or DEFAULT_ORG_ID,
+            org_id=org_id or insightops_analytics.DEFAULT_ORG_ID,
             metric_key=metric_key,
             start_date=start_date,
             end_date=end_date,
@@ -162,17 +160,21 @@ async def kpi_series(
 
 @router.get("/analytics/kpis/summary", response_model=DeltaSummary)
 async def kpi_summary(
-    org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter KPIs"),
+    org_id: str = Query(
+        insightops_analytics.DEFAULT_ORG_ID, description="Organization identifier to filter KPIs"
+    ),
     metric_key: str = Query("revenue", description="KPI metric key"),
     start_date: str | None = Query(None, description="Inclusive start date (YYYY-MM-DD)"),
     end_date: str | None = Query(None, description="Inclusive end date (YYYY-MM-DD)"),
-    lookback_days: int = Query(DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"),
+    lookback_days: int = Query(
+        insightops_analytics.DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"
+    ),
     db: AsyncSession = Depends(get_db),
 ) -> DeltaSummary:
     try:
-        series = await get_kpi_series(
+        series = await insightops_analytics.get_kpi_series(
             db=db,
-            org_id=org_id or DEFAULT_ORG_ID,
+            org_id=org_id or insightops_analytics.DEFAULT_ORG_ID,
             metric_key=metric_key,
             start_date=start_date,
             end_date=end_date,
@@ -181,22 +183,26 @@ async def kpi_summary(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
-    return compute_kpi_delta(series.points)
+    return insightops_analytics.compute_kpi_delta(series.points)
 
 
 @router.get("/analytics/engagement/series", response_model=SeriesResponse)
 async def engagement_series(
-    org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter engagement signals"),
+    org_id: str = Query(
+        insightops_analytics.DEFAULT_ORG_ID, description="Organization identifier to filter engagement signals"
+    ),
     signal_key: str = Query("touches", description="Engagement signal key"),
     start_date: str | None = Query(None, description="Inclusive start date (YYYY-MM-DD)"),
     end_date: str | None = Query(None, description="Inclusive end date (YYYY-MM-DD)"),
-    lookback_days: int = Query(DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"),
+    lookback_days: int = Query(
+        insightops_analytics.DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"
+    ),
     db: AsyncSession = Depends(get_db),
 ) -> SeriesResponse:
     try:
-        series = await get_signal_series(
+        series = await insightops_engagement.get_signal_series(
             db=db,
-            org_id=org_id or DEFAULT_ORG_ID,
+            org_id=org_id or insightops_analytics.DEFAULT_ORG_ID,
             signal_key=signal_key,
             start_date=start_date,
             end_date=end_date,
@@ -209,17 +215,21 @@ async def engagement_series(
 
 @router.get("/analytics/engagement/summary", response_model=EngagementSummary)
 async def engagement_summary(
-    org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier to filter engagement signals"),
+    org_id: str = Query(
+        insightops_analytics.DEFAULT_ORG_ID, description="Organization identifier to filter engagement signals"
+    ),
     signal_key: str = Query("touches", description="Engagement signal key"),
     start_date: str | None = Query(None, description="Inclusive start date (YYYY-MM-DD)"),
     end_date: str | None = Query(None, description="Inclusive end date (YYYY-MM-DD)"),
-    lookback_days: int = Query(DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"),
+    lookback_days: int = Query(
+        insightops_analytics.DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"
+    ),
     db: AsyncSession = Depends(get_db),
 ) -> EngagementSummary:
     try:
-        series = await get_signal_series(
+        series = await insightops_engagement.get_signal_series(
             db=db,
-            org_id=org_id or DEFAULT_ORG_ID,
+            org_id=org_id or insightops_analytics.DEFAULT_ORG_ID,
             signal_key=signal_key,
             start_date=start_date,
             end_date=end_date,
@@ -228,8 +238,8 @@ async def engagement_summary(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
 
-    aggregates = aggregate_signals(series.points)
-    health = compute_engagement_health(series.points)
+    aggregates = insightops_engagement.aggregate_signals(series.points)
+    health = insightops_engagement.compute_engagement_health(series.points)
 
     return EngagementSummary(
         total=aggregates.total,
@@ -241,19 +251,23 @@ async def engagement_summary(
 
 @router.get("/analytics/anomalies", response_model=AnomalyResponse)
 async def analytics_anomalies(
-    org_id: str = Query(DEFAULT_ORG_ID, description="Organization identifier"),
+    org_id: str = Query(
+        insightops_analytics.DEFAULT_ORG_ID, description="Organization identifier"
+    ),
     metric_key: str | None = Query("revenue", description="Optional KPI metric key to analyze"),
     signal_key: str | None = Query(None, description="Optional engagement signal key to analyze (overrides metric_key)"),
     start_date: str | None = Query(None, description="Inclusive start date (YYYY-MM-DD)"),
     end_date: str | None = Query(None, description="Inclusive end date (YYYY-MM-DD)"),
-    lookback_days: int = Query(DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"),
+    lookback_days: int = Query(
+        insightops_analytics.DEFAULT_LOOKBACK_DAYS, description="Lookback window if dates not provided"
+    ),
     db: AsyncSession = Depends(get_db),
 ) -> AnomalyResponse:
     metric_to_use = None if signal_key else metric_key
     try:
-        anomalies = await get_anomalies(
+        anomalies = await insightops_anomalies.get_anomalies(
             db=db,
-            org_id=org_id or DEFAULT_ORG_ID,
+            org_id=org_id or insightops_analytics.DEFAULT_ORG_ID,
             metric_key=metric_to_use,
             signal_key=signal_key,
             start_date=start_date,

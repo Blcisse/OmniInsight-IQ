@@ -62,8 +62,8 @@ class Settings(BaseSettings):
         if all([self.DB_HOST, self.DB_NAME, self.DB_USER, self.DB_PASS]):
             port = self.DB_PORT or 5432
             return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{port}/{self.DB_NAME}"
-        # Default fallback (safe local setup)
-        return "postgresql+asyncpg://postgres:postgres@localhost:5432/omniinsightiq"
+        # Default fallback (safe local setup using SQLite for offline testing)
+        return "sqlite+aiosqlite:///./test.db"
 
 
 # ---------------------------------------------------

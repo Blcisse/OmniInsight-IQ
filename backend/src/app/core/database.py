@@ -29,13 +29,16 @@ if not DATABASE_URL:
 # ---------------------------------------------------------
 # Enable NullPool during tests to avoid asyncpg concurrency issues.
 use_null_pool = os.getenv("SQLALCHEMY_NULLPOOL", "false").lower() in {"1", "true", "yes", "on"}
+is_sqlite = DATABASE_URL.startswith("sqlite+aiosqlite")
 
 engine = create_async_engine(
     DATABASE_URL,
     echo=os.getenv("SQLALCHEMY_ECHO", "false").lower() in {"1", "true", "yes", "on"},
     future=True,
-    poolclass=NullPool if use_null_pool else None,
+    poolclass=NullPool if use_null_pool or is_sqlite else None,
+    connect_args={"check_same_thread": False} if is_sqlite else None,
 )
+async_engine = engine  # backward compatibility for tests referencing async_engine
 
 
 # ---------------------------------------------------------
