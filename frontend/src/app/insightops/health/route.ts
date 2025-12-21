@@ -1,4 +1,4 @@
-import { proxyGet } from "../../api/insightops/_proxy";
+import { proxyGet } from "@/_proxy";
 
 export async function GET(request: Request) {
   return proxyGet("/insightops/health", request);

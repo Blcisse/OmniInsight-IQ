@@ -83,6 +83,7 @@ def create_app() -> FastAPI:
     except Exception:
         pass
 
+    # InsightOps routes must remain registered for the frontend /api/insightops/* proxy.
     try:
         from .routers import insightops_router  # type: ignore
         app.include_router(insightops_router.router)
