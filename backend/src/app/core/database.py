@@ -15,6 +15,8 @@ from .config import get_settings
 # ---------------------------------------------------------
 settings = get_settings()
 DATABASE_URL: Optional[str] = settings.build_database_url() if hasattr(settings, "build_database_url") else None
+RUNNING_TESTS = "PYTEST_CURRENT_TEST" in os.environ
+DB_LOCKED_FOR_TESTS = RUNNING_TESTS and not DATABASE_URL
 
 if not DATABASE_URL:
     import logging
@@ -30,7 +32,8 @@ engine = None
 async_engine = None
 AsyncSessionLocal = None
 
-if DATABASE_URL:
+# Prevent accidental DB usage in unit tests without a configured database.
+if DATABASE_URL and not DB_LOCKED_FOR_TESTS:
     # Enable NullPool during tests to avoid asyncpg concurrency issues.
     use_null_pool = os.getenv("SQLALCHEMY_NULLPOOL", "false").lower() in {"1", "true", "yes", "on"}
 
@@ -60,9 +63,13 @@ Base = declarative_base()
 # ---------------------------------------------------------
 # 4. Helpers
 # ---------------------------------------------------------
+def _raise_db_disabled() -> None:
+    raise RuntimeError("DATABASE_URL not set (DB access disabled during unit tests).")
+
+
 def get_engine_or_raise():
-    if engine is None:
-        raise RuntimeError("DATABASE_URL not set; DB features disabled until configured.")
+    if engine is None or DB_LOCKED_FOR_TESTS:
+        _raise_db_disabled()
     return engine
 
 
@@ -71,8 +78,8 @@ def get_engine_or_raise():
 # ---------------------------------------------------------
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Yields an AsyncSession for FastAPI routes, ensuring closure."""
-    if AsyncSessionLocal is None:
-        raise RuntimeError("DATABASE_URL not set; DB features disabled until configured.")
+    if AsyncSessionLocal is None or DB_LOCKED_FOR_TESTS:
+        _raise_db_disabled()
     async with AsyncSessionLocal() as session:
         try:
             yield session

@@ -6,6 +6,8 @@ from sqlalchemy import select, text
 from src.app.core.database import engine, AsyncSessionLocal
 from src.app.models import Base, ProductORM, SaleORM, CampaignORM
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_crud_sales_and_queries(db_setup):
@@ -54,4 +56,3 @@ async def test_campaign_crud(db_setup):
         rows = res.scalars().all()
         assert len(rows) == 1
         assert rows[0].campaign_name == "Black Friday"
-

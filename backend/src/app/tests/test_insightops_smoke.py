@@ -5,6 +5,8 @@ from src.app.main import app
 from src.app.core.database import get_db
 from src.app.schemas.insightops_executive_brief import ExecutiveBriefResponse
 
+pytestmark = pytest.mark.unit
+
 
 @pytest.fixture(autouse=True)
 def override_db_dependency():

@@ -1,14 +1,14 @@
+import pytest
 from datetime import date, datetime, timedelta
 from types import SimpleNamespace
 from uuid import uuid4
-
-import pytest
 from fastapi.testclient import TestClient
 
 from src.app.core.database import get_db
 from src.app.main import app
 from src.app.schemas.insightops_executive_brief import ExecutiveBriefResponse
 
+pytestmark = pytest.mark.unit
 client = TestClient(app)
 
 
