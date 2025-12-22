@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 # Import the FastAPI app
 from src.app.main import app
 
+pytestmark = pytest.mark.integration
 
 client = TestClient(app)
 
@@ -83,4 +84,3 @@ def test_load_mock_data_files_exist():
         assert os.path.exists(path), f"Missing {fname}"
         with open(path, "r", encoding="utf-8") as f:
             json.load(f)
-
