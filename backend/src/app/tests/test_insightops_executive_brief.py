@@ -1,12 +1,13 @@
+import pytest
 from datetime import date
 
-import pytest
 from fastapi.testclient import TestClient
 
 from src.app.core.database import get_db
 from src.app.main import app
 from src.app.schemas.insightops_analytics import Anomaly, AnomalyResponse, DeltaSummary, EngagementSummary
 
+pytestmark = pytest.mark.unit
 client = TestClient(app)
 
 

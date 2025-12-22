@@ -33,3 +33,6 @@
 - API responses for InsightOps analytics are defined in `backend/src/app/schemas/insightops_analytics.py` (series, deltas, engagement summaries, anomalies).
 - Analytics routes live under `/insightops/analytics/...` and return these Pydantic schemas for UI consumption.
 - Run InsightOps-only tests: `pytest -q -k insightops`
+
+## Runbook
+- For operator quick start, verification gates, and troubleshooting, see [InsightOps Operator Runbook](./INSIGHTOPS_RUNBOOK.md).

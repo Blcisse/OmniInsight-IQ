@@ -11,6 +11,8 @@ from ..schemas.insightops_executive_brief import (
     ExecutiveOpportunity,
     ExecutiveRisk,
 )
+from ..intelligence.schemas import DriverAttribution, PrioritizedInsight, SynthesisBlock
+from .insightops_intelligence import build_cross_domain_intelligence
 from .insightops import get_anomalies, get_engagement_summary, get_kpi_summary
 from .insightops_interpretation.anomaly_interpreter import interpret_anomalies
 from .insightops_interpretation.engagement_interpreter import interpret_engagement
@@ -36,8 +38,12 @@ async def build_executive_brief(
     risks: list[ExecutiveRisk] = []
     opportunities: list[ExecutiveOpportunity] = []
     notes: list[str] = []
+    driver_attribution: DriverAttribution | None = None
+    prioritized_insights: list[PrioritizedInsight] | None = None
+    synthesis_block: SynthesisBlock | None = None
 
     kpi_interps: list[dict] = []
+    primary_kpi_summary = None
     kpi_severity_max = 0
 
     # KPI insights and risks
@@ -54,6 +60,8 @@ async def build_executive_brief(
             summary.percent_delta,
             summary.rolling_avg_7d_latest,
         )
+        if primary_kpi_summary is None:
+            primary_kpi_summary = summary
         kpi_interps.append({"key": metric_key, "interpretation": interpretation})
         kpi_severity_max = max(kpi_severity_max, interpretation["severity"])
 
@@ -169,6 +177,31 @@ async def build_executive_brief(
     if not opportunities:
         notes.append("Opportunities limited due to insufficient positive signals.")
 
+    # Cross-domain intelligence (optional enrichment, deterministic and DB-free)
+    try:
+        intelligence = build_cross_domain_intelligence(
+            kpi_key=metric_keys[0],
+            engagement_key=signal_key,
+            kpi_summary=primary_kpi_summary or summary,
+            engagement_summary=engagement_summary,
+            anomaly_summary=anomalies_response,
+            explain=True,
+        )
+        driver_attribution = intelligence["driver"]
+        prioritized_insights = intelligence["priorities"]
+        synthesis_block = intelligence["synthesis"]
+        executive_narrative = intelligence.get("executive_narrative")
+        top_drivers = executive_narrative.get("top_drivers") if executive_narrative else None
+        priority_focus = executive_narrative.get("immediate_focus") if executive_narrative else None
+    except Exception:
+        # Keep backwards compatibility if enrichment fails
+        driver_attribution = None
+        prioritized_insights = None
+        synthesis_block = None
+        executive_narrative = None
+        top_drivers = None
+        priority_focus = None
+
     return ExecutiveBriefResponse(
         org_id=org_id,
         generated_at=datetime.utcnow(),
@@ -179,4 +212,10 @@ async def build_executive_brief(
         risks=risks,
         opportunities=opportunities,
         notes=notes,
+        driver_attribution=driver_attribution,
+        prioritized_insights=prioritized_insights,
+        synthesis_block=synthesis_block,
+        executive_narrative=executive_narrative,
+        top_drivers=top_drivers,
+        priority_focus=priority_focus,
     )
