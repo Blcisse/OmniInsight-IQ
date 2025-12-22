@@ -32,7 +32,8 @@
     // Paths / Aliases
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@/_proxy": ["src/app/api/insightops/_proxy.ts"]
     },
 
     // Libraries
