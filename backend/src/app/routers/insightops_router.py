@@ -8,9 +8,16 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.database import get_db
-from ..services import insightops_analytics, insightops_anomalies, insightops_engagement
-from ..services.insightops import fetch_engagement_signals, fetch_exec_summaries, fetch_kpis
+from ..services import (
+    insightops_analytics,
+    insightops_anomalies,
+    insightops_engagement,
+    insightops_executive_brief,
+)
+from ..services import insightops_exec_persistence as exec_persistence
+from ..services.insightops import fetch_engagement_signals, fetch_kpis
 from ..schemas.insightops_analytics import Anomaly, AnomalyResponse, DeltaSummary, EngagementSummary, SeriesResponse
+from ..schemas.insightops_executive_brief import ExecutiveBriefResponse
 
 router = APIRouter(prefix="/insightops", tags=["InsightOps"])
 
@@ -59,6 +66,7 @@ class ExecSummary(BaseModel):
     org_id: str
     summary_type: str
     summary_text: str
+    payload_json: dict | None = None
     model_name: str | None = None
     created_at: datetime
     updated_at: datetime
@@ -102,29 +110,6 @@ async def list_engagement_signals(
     try:
         records = await fetch_engagement_signals(
             db, org_id=org_id, start_date=start_date, end_date=end_date, signal_key=signal_key
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-    return records
-
-
-@router.get("/executive-summaries", response_model=list[ExecSummary])
-async def list_executive_summaries(
-    org_id: str = Query(
-        insightops_analytics.DEFAULT_ORG_ID, description="Organization identifier to filter summaries"
-    ),
-    period_start: date | None = Query(None, description="Inclusive start of summary period (YYYY-MM-DD)"),
-    period_end: date | None = Query(None, description="Inclusive end of summary period (YYYY-MM-DD)"),
-    summary_type: str | None = Query(None, description="Optional summary type (e.g., manager, board)"),
-    db: AsyncSession = Depends(get_db),
-) -> list[ExecSummary]:
-    try:
-        records = await fetch_exec_summaries(
-            db,
-            org_id=org_id,
-            period_start=period_start,
-            period_end=period_end,
-            summary_type=summary_type,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
@@ -277,3 +262,76 @@ async def analytics_anomalies(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     return anomalies
+
+
+@router.get("/executive-brief", response_model=ExecutiveBriefResponse)
+async def executive_brief(
+    org_id: str = Query(
+        insightops_analytics.DEFAULT_ORG_ID, description="Organization identifier for the executive brief"
+    ),
+    window_days: int = Query(
+        insightops_analytics.DEFAULT_LOOKBACK_DAYS, description="Rolling window (days) used for summaries"
+    ),
+    persist: bool = Query(False, description="Persist the generated brief to io_exec_summary"),
+    summary_type: str = Query("board", description="Summary type label to persist"),
+    db: AsyncSession = Depends(get_db),
+) -> ExecutiveBriefResponse:
+    try:
+        brief = await insightops_executive_brief.build_executive_brief(
+            db=db,
+            org_id=org_id or insightops_analytics.DEFAULT_ORG_ID,
+            window_days=window_days,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+    if persist:
+        record = await exec_persistence.save_exec_brief(
+            db=db,
+            org_id=org_id or insightops_analytics.DEFAULT_ORG_ID,
+            brief=brief,
+            summary_type=summary_type,
+        )
+        return brief.model_copy(update={"saved": True, "summary_id": str(record.id), "summary_type": summary_type})
+
+    return brief
+
+
+@router.get("/executive-summaries/latest", response_model=ExecSummary)
+async def latest_executive_summary(
+    org_id: str = Query(
+        insightops_analytics.DEFAULT_ORG_ID, description="Organization identifier to filter summaries"
+    ),
+    summary_type: str = Query("board", description="Summary type label"),
+    include_payload: bool = Query(False, description="Include stored payload_json if available"),
+    db: AsyncSession = Depends(get_db),
+) -> ExecSummary:
+    record = await exec_persistence.get_latest_exec_summary(
+        db=db,
+        org_id=org_id or insightops_analytics.DEFAULT_ORG_ID,
+        summary_type=summary_type,
+        include_payload=include_payload,
+    )
+    if not record:
+        raise HTTPException(status_code=404, detail="No executive summaries found")
+    return record
+
+
+@router.get("/executive-summaries", response_model=list[ExecSummary])
+async def list_executive_summaries(
+    org_id: str = Query(
+        insightops_analytics.DEFAULT_ORG_ID, description="Organization identifier to filter summaries"
+    ),
+    summary_type: str = Query("board", description="Summary type label"),
+    limit: int = Query(20, ge=1, le=100, description="Maximum number of summaries to return"),
+    include_payload: bool = Query(False, description="Include stored payload_json if available"),
+    db: AsyncSession = Depends(get_db),
+) -> list[ExecSummary]:
+    records = await exec_persistence.list_exec_summaries(
+        db=db,
+        org_id=org_id or insightops_analytics.DEFAULT_ORG_ID,
+        summary_type=summary_type,
+        limit=limit,
+        include_payload=include_payload,
+    )
+    return records

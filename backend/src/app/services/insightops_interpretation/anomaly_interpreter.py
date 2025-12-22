@@ -22,7 +22,11 @@ def interpret_anomalies(anomalies: Optional[List[dict]]) -> Dict[str, Any]:
     count = len(anomalies)
     max_severity = 0
     for anomaly in anomalies:
-        severity = anomaly.get("severity")
+        severity = None
+        if hasattr(anomaly, "get"):
+            severity = anomaly.get("severity")  # type: ignore[assignment]
+        if severity is None and hasattr(anomaly, "severity"):
+            severity = getattr(anomaly, "severity")
         if isinstance(severity, (int, float)):
             severity_value = int(severity)
         elif isinstance(severity, str):

@@ -4,7 +4,7 @@ import uuid
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import Date, DateTime, Numeric, String, Text, func
+from sqlalchemy import JSON, Date, DateTime, Numeric, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -69,6 +69,7 @@ class IoExecSummaryORM(Base):
     org_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
     summary_type: Mapped[str] = mapped_column(String, nullable=False)
     summary_text: Mapped[str] = mapped_column(Text, nullable=False)
+    payload_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     model_name: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()

@@ -4,6 +4,7 @@ import {
   Anomaly,
   AnomaliesResponse,
   EngagementSummaryResponse,
+  ExecutiveBriefResponse,
   KpiSummaryResponse,
   SeriesPoint,
 } from "./types";
@@ -34,6 +35,11 @@ type EngagementSeriesParams = {
   orgId?: string;
   signalKey?: string;
   lookbackDays?: number;
+};
+
+type ExecutiveBriefParams = {
+  orgId?: string;
+  windowDays?: number;
 };
 
 const withDefaults = <T extends Record<string, unknown>>(params: T) => ({
@@ -132,6 +138,19 @@ export async function getAnomalies(
       return (payload as any).anomalies;
     }
     return [];
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function getExecutiveBrief(
+  { orgId = "demo_org", windowDays = 14 }: ExecutiveBriefParams = {}
+): Promise<ExecutiveBriefResponse> {
+  try {
+    const response = await apiClient.get<ExecutiveBriefResponse>("/api/insightops/executive-brief", {
+      params: withDefaults({ org_id: orgId, window_days: windowDays }),
+    });
+    return response.data;
   } catch (error) {
     handleError(error);
   }

@@ -42,10 +42,22 @@ CREATE TABLE IF NOT EXISTS io_exec_summary (
     org_id TEXT NOT NULL,
     summary_type TEXT NOT NULL,
     summary_text TEXT NOT NULL,
+    payload_json JSONB,
     model_name TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Ensure payload_json exists for persisted executive briefs
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'io_exec_summary' AND column_name = 'payload_json'
+    ) THEN
+        EXECUTE 'ALTER TABLE io_exec_summary ADD COLUMN payload_json JSONB';
+    END IF;
+END$$;
 
 -- Indexes for date/org filtering and period lookups
 CREATE INDEX IF NOT EXISTS idx_io_kpi_daily_kpi_date ON io_kpi_daily (kpi_date);

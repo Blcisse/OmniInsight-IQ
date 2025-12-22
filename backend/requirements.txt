@@ -30,7 +30,7 @@ redis==7.0.1
 beautifulsoup4==4.13.4
 pypdf==6.0.0
 
-# Logging / Observability (keep only what you actively use)
-structlog==25.5.0
-coloredlogs==15.0.1
-
+# Testing (optional)
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+httpx>=0.24.0

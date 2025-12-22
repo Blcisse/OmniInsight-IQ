@@ -62,6 +62,7 @@ export default function Sidebar() {
       { href: "/dashboard/ai-insights", label: "AI Insights" },
       { href: "/insightops", label: "InsightOps Studio (Executive)", exact: true },
       { href: "/insightops/analyst", label: "InsightOps Studio (Analyst)" },
+      { href: "/insightops/brief", label: "InsightOps Studio (Brief)", exact: true },
     ],
     []
   );
