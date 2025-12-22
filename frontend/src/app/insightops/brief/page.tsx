@@ -10,6 +10,8 @@ export default function ExecutiveBriefPage() {
   const [brief, setBrief] = useState<ExecutiveBriefResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [demoMode, setDemoMode] = useState<boolean>(false);
+  const [demoProfile, setDemoProfile] = useState<string>("EXEC_REVENUE_RISK");
 
   useEffect(() => {
     let mounted = true;
@@ -17,7 +19,12 @@ export default function ExecutiveBriefPage() {
     async function loadBrief() {
       setLoading(true);
       try {
-        const data = await getExecutiveBrief({ orgId: "demo_org", windowDays: 14 });
+        const data = await getExecutiveBrief({
+          orgId: "demo_org",
+          windowDays: 14,
+          demoMode,
+          demoProfile: demoMode ? demoProfile : null,
+        });
         if (!mounted) return;
         setBrief(data);
         setError(null);
@@ -34,7 +41,7 @@ export default function ExecutiveBriefPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [demoMode, demoProfile]);
 
   return (
     <section style={{ display: "grid", gap: "1.25rem", maxWidth: "960px", margin: "0 auto", paddingBottom: "2rem" }}>
@@ -50,6 +57,31 @@ export default function ExecutiveBriefPage() {
           ← Back to Executive Dashboard
         </Link>
       </header>
+
+      <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+          <input
+            type="checkbox"
+            checked={demoMode}
+            onChange={(e) => setDemoMode(e.target.checked)}
+          />
+          Demo Mode
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span style={{ color: "var(--text-secondary)" }}>Demo Profile</span>
+          <select
+            value={demoProfile}
+            onChange={(e) => setDemoProfile(e.target.value)}
+            disabled={!demoMode}
+            style={{ padding: "0.25rem 0.5rem" }}
+          >
+            <option value="EXEC_REVENUE_RISK">EXEC_REVENUE_RISK</option>
+            <option value="EXEC_ANOMALY_SPIKE">EXEC_ANOMALY_SPIKE</option>
+            <option value="EXEC_STABLE_GROWTH">EXEC_STABLE_GROWTH</option>
+            <option value="EXEC_ENGAGEMENT_DROP">EXEC_ENGAGEMENT_DROP</option>
+          </select>
+        </label>
+      </div>
 
       {loading && <p style={{ color: "var(--text-secondary)" }}>Loading executive brief…</p>}
       {!loading && error && (

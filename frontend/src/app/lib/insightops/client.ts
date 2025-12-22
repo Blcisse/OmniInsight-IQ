@@ -40,6 +40,8 @@ type EngagementSeriesParams = {
 type ExecutiveBriefParams = {
   orgId?: string;
   windowDays?: number;
+  demoMode?: boolean;
+  demoProfile?: string | null;
 };
 
 const withDefaults = <T extends Record<string, unknown>>(params: T) => ({
@@ -144,11 +146,16 @@ export async function getAnomalies(
 }
 
 export async function getExecutiveBrief(
-  { orgId = "demo_org", windowDays = 14 }: ExecutiveBriefParams = {}
+  { orgId = "demo_org", windowDays = 14, demoMode = false, demoProfile = null }: ExecutiveBriefParams = {}
 ): Promise<ExecutiveBriefResponse> {
   try {
     const response = await apiClient.get<ExecutiveBriefResponse>("/api/insightops/executive-brief", {
-      params: withDefaults({ org_id: orgId, window_days: windowDays }),
+      params: withDefaults({
+        org_id: orgId,
+        window_days: windowDays,
+        demo_mode: demoMode,
+        demo_profile: demoProfile || undefined,
+      }),
     });
     return response.data;
   } catch (error) {

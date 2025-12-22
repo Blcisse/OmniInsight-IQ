@@ -82,6 +82,16 @@ def _resolve_org_id(org_id: str | None, org_id_camel: str | None, default: str) 
     return org_id or org_id_camel or default
 
 
+async def get_db_optional():
+    """Return DB session when available; otherwise allow demo-mode usage."""
+    try:
+        async for session in get_db():
+            yield session
+            return
+    except Exception:
+        yield None
+
+
 @router.get("/health")
 async def insightops_health() -> dict:
     return {"domain": "insightops-studio", "status": "ok"}
@@ -298,14 +308,22 @@ async def executive_brief(
     ),
     persist: bool = Query(False, description="Persist the generated brief to io_exec_summary"),
     summary_type: str = Query("board", description="Summary type label to persist"),
-    db: AsyncSession = Depends(get_db),
+    demo_mode: bool = Query(False, description="Use deterministic demo intelligence"),
+    demo_profile: str | None = Query(None, description="Demo profile preset"),
+    db: AsyncSession | None = Depends(get_db_optional),
 ) -> ExecutiveBriefResponse:
     resolved_org_id = _resolve_org_id(org_id, orgId, insightops_analytics.DEFAULT_ORG_ID)
+    if demo_mode:
+        valid_profiles = {"EXEC_STABLE_GROWTH", "EXEC_REVENUE_RISK", "EXEC_ENGAGEMENT_DROP", "EXEC_ANOMALY_SPIKE"}
+        if demo_profile and demo_profile not in valid_profiles:
+            raise HTTPException(status_code=400, detail="Invalid demo_profile. Use one of: " + ", ".join(sorted(valid_profiles)))
     try:
         brief = await insightops_executive_brief.build_executive_brief(
             db=db,
             org_id=resolved_org_id,
             window_days=window_days,
+            demo_mode=demo_mode,
+            demo_profile=demo_profile,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
