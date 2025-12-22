@@ -23,8 +23,13 @@ Frontend UI Components Library
 
 📄 Documentation
 - [InsightOps Studio Injection](docs/INSIGHTOPS_INJECTION.md)
+- [InsightOps Operator Runbook](docs/INSIGHTOPS_RUNBOOK.md)
 
 ## Testing
 - Unit tests (no DB, no servers): `bash scripts/test_unit.sh`
 - Integration tests (requires Postgres + backend): `bash scripts/test_integration.sh`
 - Runtime smoke (requires backend + frontend): `bash scripts/verify_insightops.sh`
+
+## CD Phases
+- Completed: CD1 (scaffolding), CD2 (data model + endpoints), CD3 (analytics), CD4 (dashboards), CD5 (decision layer), CD6 (hardening in progress)
+- Next planned: CD7 (cross-domain intelligence), CD8 (optional LLM augmentation), CD9 (optional voice layer)

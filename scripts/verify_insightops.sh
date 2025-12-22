@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Requires backend (8000) and frontend (3000) running; exits non-zero if either is unavailable.
 set -euo pipefail
 
 fail() {
