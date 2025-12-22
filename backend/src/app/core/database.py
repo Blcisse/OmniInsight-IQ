@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
@@ -14,49 +14,56 @@ from .config import get_settings
 # 1. Load Environment Settings and Build Database URL
 # ---------------------------------------------------------
 settings = get_settings()
-DATABASE_URL = settings.build_database_url() if hasattr(settings, "build_database_url") else None
+DATABASE_URL: Optional[str] = settings.build_database_url() if hasattr(settings, "build_database_url") else None
 
 if not DATABASE_URL:
-    raise ValueError(
-        "❌ DATABASE_URL could not be built. "
-        "Ensure your .env or config provides valid DB credentials "
-        "(PG_USER, PG_PASSWORD, PG_HOST, PG_PORT, PG_DB) or DATABASE_URL directly."
-    )
+    import logging
+
+    logger = logging.getLogger("uvicorn")
+    logger.warning("DATABASE_URL not set; DB features disabled until configured.")
 
 
 # ---------------------------------------------------------
 # 2. Async Engine Setup
 # ---------------------------------------------------------
-# Enable NullPool during tests to avoid asyncpg concurrency issues.
-use_null_pool = os.getenv("SQLALCHEMY_NULLPOOL", "false").lower() in {"1", "true", "yes", "on"}
-is_sqlite = DATABASE_URL.startswith("sqlite+aiosqlite")
+engine = None
+async_engine = None
+AsyncSessionLocal = None
 
-engine = create_async_engine(
-    DATABASE_URL,
-    echo=os.getenv("SQLALCHEMY_ECHO", "false").lower() in {"1", "true", "yes", "on"},
-    future=True,
-    poolclass=NullPool if use_null_pool or is_sqlite else None,
-    connect_args={"check_same_thread": False} if is_sqlite else None,
-)
-async_engine = engine  # backward compatibility for tests referencing async_engine
+if DATABASE_URL:
+    # Enable NullPool during tests to avoid asyncpg concurrency issues.
+    use_null_pool = os.getenv("SQLALCHEMY_NULLPOOL", "false").lower() in {"1", "true", "yes", "on"}
+
+    engine = create_async_engine(
+        DATABASE_URL,
+        echo=os.getenv("SQLALCHEMY_ECHO", "false").lower() in {"1", "true", "yes", "on"},
+        future=True,
+        poolclass=NullPool if use_null_pool else None,
+    )
+    async_engine = engine  # backward compatibility for tests referencing async_engine
+
+    AsyncSessionLocal = async_sessionmaker(
+        bind=engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+        autoflush=False,
+        autocommit=False,
+    )
 
 
 # ---------------------------------------------------------
-# 3. Async Session Factory
-# ---------------------------------------------------------
-AsyncSessionLocal = async_sessionmaker(
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-    autoflush=False,
-    autocommit=False,
-)
-
-
-# ---------------------------------------------------------
-# 4. Declarative Base
+# 3. Declarative Base
 # ---------------------------------------------------------
 Base = declarative_base()
+
+
+# ---------------------------------------------------------
+# 4. Helpers
+# ---------------------------------------------------------
+def get_engine_or_raise():
+    if engine is None:
+        raise RuntimeError("DATABASE_URL not set; DB features disabled until configured.")
+    return engine
 
 
 # ---------------------------------------------------------
@@ -64,6 +71,8 @@ Base = declarative_base()
 # ---------------------------------------------------------
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Yields an AsyncSession for FastAPI routes, ensuring closure."""
+    if AsyncSessionLocal is None:
+        raise RuntimeError("DATABASE_URL not set; DB features disabled until configured.")
     async with AsyncSessionLocal() as session:
         try:
             yield session
@@ -94,5 +103,5 @@ async def create_all_tables() -> None:
         IoExecSummaryORM,
     )
 
-    async with engine.begin() as conn:
+    async with get_engine_or_raise().begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
