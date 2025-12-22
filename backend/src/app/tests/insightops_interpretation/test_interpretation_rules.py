@@ -63,3 +63,6 @@ def test_priority_score_levels():
 
     high = compute_priority_score(kpi_sev=100, engagement_sev=100, anomaly_sev=100)
     assert high == {"priority_score": 100, "level": "high"}
+import pytest
+
+pytestmark = pytest.mark.unit

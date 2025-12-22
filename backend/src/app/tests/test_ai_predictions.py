@@ -5,6 +5,8 @@ from src.app.models import SaleORM, CampaignORM
 from src.app.lib.mlModels.regressionModel import linear_regression_forecast
 from src.app.lib.mlModels.clusteringModel import kmeans_segments
 
+pytestmark = pytest.mark.integration
+
 @pytest.mark.asyncio
 async def test_regression_forecast_shape_and_nonnegative(db_setup):
     async with AsyncSessionLocal() as session:

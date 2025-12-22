@@ -23,3 +23,8 @@ Frontend UI Components Library
 
 📄 Documentation
 - [InsightOps Studio Injection](docs/INSIGHTOPS_INJECTION.md)
+
+## Testing
+- Unit tests (no DB, no servers): `bash scripts/test_unit.sh`
+- Integration tests (requires Postgres + backend): `bash scripts/test_integration.sh`
+- Runtime smoke (requires backend + frontend): `bash scripts/verify_insightops.sh`

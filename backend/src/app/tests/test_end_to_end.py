@@ -3,6 +3,8 @@ from fastapi.testclient import TestClient
 
 from src.app.main import app
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.parametrize(
     "path",
@@ -28,4 +30,3 @@ def test_reports_generate_csv():
     # If router is wired, we should get CSV (or 400 if missing libs for PDF)
     assert resp.status_code == 200
     assert resp.headers.get("content-type", "").startswith("text/csv")
-
