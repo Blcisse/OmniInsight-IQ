@@ -49,5 +49,8 @@ class ExecutiveBriefResponse(BaseModel):
     driver_attribution: DriverAttribution | None = None
     prioritized_insights: List[PrioritizedInsight] | None = None
     synthesis_block: SynthesisBlock | None = None
+    executive_narrative: dict | None = None
+    top_drivers: List[str] | None = None
+    priority_focus: str | None = None
 
     model_config = ConfigDict(from_attributes=True)

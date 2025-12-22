@@ -47,6 +47,7 @@ def test_priorities_sorted_and_scaled():
     assert priorities[0].impact_score >= priorities[1].impact_score
     assert all(0 <= p.impact_score <= 100 for p in priorities)
     assert all(0 <= p.urgency_score <= 100 for p in priorities)
+    assert all(p.explainability_notes for p in priorities)
 
 
 def test_synthesis_uses_driver_and_priority():

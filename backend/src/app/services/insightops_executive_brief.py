@@ -185,15 +185,22 @@ async def build_executive_brief(
             kpi_summary=primary_kpi_summary or summary,
             engagement_summary=engagement_summary,
             anomaly_summary=anomalies_response,
+            explain=True,
         )
         driver_attribution = intelligence["driver"]
         prioritized_insights = intelligence["priorities"]
         synthesis_block = intelligence["synthesis"]
+        executive_narrative = intelligence.get("executive_narrative")
+        top_drivers = executive_narrative.get("top_drivers") if executive_narrative else None
+        priority_focus = executive_narrative.get("immediate_focus") if executive_narrative else None
     except Exception:
         # Keep backwards compatibility if enrichment fails
         driver_attribution = None
         prioritized_insights = None
         synthesis_block = None
+        executive_narrative = None
+        top_drivers = None
+        priority_focus = None
 
     return ExecutiveBriefResponse(
         org_id=org_id,
@@ -208,4 +215,7 @@ async def build_executive_brief(
         driver_attribution=driver_attribution,
         prioritized_insights=prioritized_insights,
         synthesis_block=synthesis_block,
+        executive_narrative=executive_narrative,
+        top_drivers=top_drivers,
+        priority_focus=priority_focus,
     )

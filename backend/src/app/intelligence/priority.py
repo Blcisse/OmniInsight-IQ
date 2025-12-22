@@ -34,12 +34,18 @@ class Prioritizer:
         insights: List[PrioritizedInsight] = []
         for idx, title in enumerate(titles):
             decay = max(0.0, 1 - idx * 0.1)
+            notes = [
+                f"kpi_delta={kpi_percent_delta or 0.0:.3f}",
+                f"trend_accel={trend_acceleration or 0.0:.3f}",
+                f"anomalies={anomalies_present}",
+            ]
             insights.append(
                 PrioritizedInsight(
                     title=title,
                     impact_score=cls._clamp(impact_score * decay),
                     urgency_score=cls._clamp(urgency_score * decay),
                     confidence=min(1.0, base_conf),
+                    explainability_notes=notes,
                 )
             )
 
