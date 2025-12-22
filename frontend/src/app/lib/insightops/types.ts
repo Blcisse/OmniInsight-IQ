@@ -53,6 +53,20 @@ export type ExecutiveOpportunity = {
   confidence: number;
 };
 
+export type DriverAttribution = {
+  primary_driver: string;
+  supporting_factors?: string[];
+  confidence?: number;
+};
+
+export type PrioritizedInsight = {
+  title: string;
+  impact_score: number;
+  urgency_score: number;
+  confidence: number;
+  explainability_notes?: string[];
+};
+
 export type ExecutiveBriefResponse = {
   org_id: string;
   generated_at: string;
@@ -66,4 +80,21 @@ export type ExecutiveBriefResponse = {
   saved?: boolean;
   summary_id?: string | null;
   summary_type?: string | null;
+  driver_attribution?: DriverAttribution | null;
+  prioritized_insights?: PrioritizedInsight[] | null;
+  synthesis_block?: {
+    situation: string;
+    evidence: string;
+    risk: string;
+    opportunity: string;
+    recommended_focus: string;
+  } | null;
+  executive_narrative?: {
+    headline: string;
+    why_now: string;
+    top_drivers: string[];
+    immediate_focus: string;
+  } | null;
+  top_drivers?: string[] | null;
+  priority_focus?: string | null;
 };

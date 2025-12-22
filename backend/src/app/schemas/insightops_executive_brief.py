@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict
+from ..intelligence.schemas import DriverAttribution, PrioritizedInsight, SynthesisBlock
 
 
 class ExecutiveInsight(BaseModel):
@@ -45,5 +46,11 @@ class ExecutiveBriefResponse(BaseModel):
     saved: bool | None = None
     summary_id: str | None = None
     summary_type: str | None = None
+    driver_attribution: DriverAttribution | None = None
+    prioritized_insights: List[PrioritizedInsight] | None = None
+    synthesis_block: SynthesisBlock | None = None
+    executive_narrative: dict | None = None
+    top_drivers: List[str] | None = None
+    priority_focus: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
