@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/images/oiiqlogo.png" alt="OmniInsight-IQ logo" width="320" height="120" />
+  <img src="assets/images/oiiqlogo.png" alt="OmniInsight-IQ logo" width="320" height="220" />
 </p>
 <p align="center"><strong>AI-Driven Performance & Engagement Intelligence Platform</strong></p>
 
