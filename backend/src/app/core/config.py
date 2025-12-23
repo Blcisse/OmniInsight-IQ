@@ -1,5 +1,6 @@
 from functools import lru_cache
 from typing import List, Optional
+import logging
 import os
 
 try:
@@ -44,9 +45,16 @@ class Settings(BaseSettings):
     DATABASE_URL: Optional[str] = os.getenv("DATABASE_URL")
 
     # ---------------------------------------------------
+    # FRONTEND PROXY CONTRACT
+    # ---------------------------------------------------
+    FRONTEND_PROXY_ENABLED: bool = (
+        os.getenv("INSIGHTOPS_FRONTEND_PROXY_ENABLED", "true").lower() in {"1", "true", "yes", "on"}
+    )
+
+    # ---------------------------------------------------
     # DATABASE URL BUILDER
     # ---------------------------------------------------
-    def build_database_url(self) -> str:
+    def build_database_url(self) -> Optional[str]:
         """
         Construct SQLAlchemy async database URL.
         Priority order:
@@ -62,8 +70,32 @@ class Settings(BaseSettings):
         if all([self.DB_HOST, self.DB_NAME, self.DB_USER, self.DB_PASS]):
             port = self.DB_PORT or 5432
             return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{port}/{self.DB_NAME}"
-        # Default fallback (safe local setup using SQLite for offline testing)
-        return "sqlite+aiosqlite:///./test.db"
+        return None
+
+    # ---------------------------------------------------
+    # STARTUP WARNINGS (non-fatal)
+    # ---------------------------------------------------
+    def startup_warnings(self) -> List[str]:
+        warnings: List[str] = []
+        has_pg_env = any([self.PG_URI, self.DATABASE_URL, self.DB_HOST, self.DB_NAME, self.DB_USER, self.DB_PASS])
+        if not has_pg_env:
+            warnings.append(
+                "DATABASE_URL not set; DB features disabled until configured."
+            )
+
+        if self.ENV.lower() in {"dev", "development"} and not self.FRONTEND_PROXY_ENABLED:
+            warnings.append(
+                "Running in development without frontend proxy enabled. "
+                "InsightOps frontend calls must go through /api/insightops/* proxy routes."
+            )
+
+        return warnings
+
+
+def emit_startup_warnings(settings: Settings) -> None:
+    logger = logging.getLogger("uvicorn")
+    for warning in settings.startup_warnings():
+        logger.warning(warning)
 
 
 # ---------------------------------------------------
@@ -72,4 +104,6 @@ class Settings(BaseSettings):
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
     """Return cached settings instance for fast reuse."""
-    return Settings()
+    settings = Settings()
+    emit_startup_warnings(settings)
+    return settings

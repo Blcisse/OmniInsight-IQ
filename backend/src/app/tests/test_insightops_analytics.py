@@ -12,6 +12,8 @@ from src.app.schemas.insightops_analytics import (
     SeriesResponse,
 )
 
+pytestmark = pytest.mark.unit
+
 client = TestClient(app)
 
 
