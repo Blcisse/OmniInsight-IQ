@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/images/oiiq-logo.png" alt="OmniInsight IQ logo" width="220" />
+  <img src="assets/images/oiiqlogo.png" alt="OmniInsight-IQ logo" width="320" height="120" />
 </p>
 <p align="center"><strong>AI-Driven Performance & Engagement Intelligence Platform</strong></p>
 
@@ -9,7 +9,7 @@ AI-Driven Performance & Engagement Intelligence Platform
 ## Overview
 OmniInsight IQ (OIIQ) is a modular, enterprise-grade intelligence platform designed to support consulting-led decision-making through scalable data engineering, AI-driven analytics, and explainable insight delivery.
 
-The platform unifies performance analytics, engagement intelligence, and AI-assisted reasoning within a single, extensible architecture. OIIQ demonstrates how modern AI systems—built around LLMs, RAG pipelines, and cloud-native services—can be applied across multiple business domains while maintaining a consistent, scalable foundation.
+The platform unifies performance analytics, engagement intelligence, and AI-assisted reasoning within a single, extensible architecture. OIIQ demonstrates how modern AI systems—built around LLMs, RAG pipelines, and cloud-native services can be applied across multiple business domains while maintaining a consistent, scalable foundation.
 
 OIIQ is developed as a solo, end-to-end system and serves as a real-world reference implementation for AI-first software engineering, data systems design, and intelligent automation in enterprise and consulting environments.
 
