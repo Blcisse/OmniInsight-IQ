@@ -1,50 +1,82 @@
 "use client";
-import React, { useEffect } from "react";
-import { useNutritionIntelligenceStore } from "@/store/hooks";
+import React, { useEffect, useRef } from "react";
+import { useDashboardStore } from "@/store/dashboardStore";
+import { shallow } from "zustand/shallow";
 import LoadingState from "@/components/LoadingState";
 import ErrorDisplay from "@/components/ErrorDisplay";
 import RetryButton from "@/components/RetryButton";
 
 export default function NutritionPage() {
-  const nutrition = useNutritionIntelligenceStore();
+  const {
+    insights,
+    products,
+    trends,
+    loading,
+    error,
+    fetchInsights,
+    fetchProductData,
+    fetchTrends,
+    refreshNutritionIntelligence,
+    setError,
+  } = useDashboardStore(
+    (state) => ({
+      insights: state.insights || [],
+      products: state.products || [],
+      trends: state.trends || [],
+      loading: state.loading,
+      error: state.error,
+      fetchInsights: state.fetchInsights,
+      fetchProductData: state.fetchProductData,
+      fetchTrends: state.fetchTrends,
+      refreshNutritionIntelligence: state.refreshNutritionIntelligence,
+      setError: state.setError,
+    }),
+    shallow
+  );
+  const hasFetched = useRef(false);
 
   useEffect(() => {
-    nutrition.fetchInsights();
-    nutrition.fetchProductData();
-    nutrition.fetchTrends();
-  }, [nutrition.fetchInsights, nutrition.fetchProductData, nutrition.fetchTrends]);
+    if (!hasFetched.current) {
+      hasFetched.current = true;
+      fetchInsights();
+      fetchProductData();
+      fetchTrends();
+    }
+    // Disable exhaustive deps - using hasFetched ref to prevent infinite loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleRetry = () => {
-    nutrition.refreshNutritionIntelligence();
+    refreshNutritionIntelligence();
   };
 
   return (
     <section>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <h1 className="heading-gradient">Nutrition Intelligence</h1>
+        <h1 className="heading-gradient">Thryvion Health - Nutrition Intelligence</h1>
         <RetryButton
           onRetry={handleRetry}
           label="Refresh"
           variant="outline"
-          disabled={nutrition.loading}
+          disabled={loading}
         />
       </div>
 
       <ErrorDisplay
-        error={nutrition.error}
+        error={error}
         onRetry={handleRetry}
         variant="card"
         dismissible={true}
-        onDismiss={() => nutrition.setError(null)}
+        onDismiss={() => setError(null)}
       />
 
-      <LoadingState loading={nutrition.loading} error={nutrition.error} message="Loading nutrition data...">
+      <LoadingState loading={loading} error={error} message="Loading nutrition data...">
 
-      {nutrition.insights.length > 0 && (
+      {insights.length > 0 && (
         <div style={{ marginTop: 16 }}>
           <h2>Insights</h2>
           <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
-            {nutrition.insights.map((insight) => (
+            {insights.map((insight) => (
               <div
                 key={insight.id}
                 style={{
@@ -72,11 +104,11 @@ export default function NutritionPage() {
         </div>
       )}
 
-      {nutrition.trends.length > 0 && (
+      {trends.length > 0 && (
         <div style={{ marginTop: 24 }}>
           <h2>Trends</h2>
           <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
-            {nutrition.trends.map((trend, i) => (
+            {trends.map((trend, i) => (
               <div
                 key={i}
                 style={{
@@ -128,11 +160,11 @@ export default function NutritionPage() {
         </div>
       )}
 
-      {nutrition.productData.length > 0 && (
+      {products.length > 0 && (
         <div style={{ marginTop: 24 }}>
           <h2>Product Nutrition Data</h2>
           <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
-            {nutrition.productData.map((product) => (
+            {products.map((product) => (
               <div
                 key={product.productId}
                 style={{

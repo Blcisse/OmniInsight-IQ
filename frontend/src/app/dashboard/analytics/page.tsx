@@ -26,7 +26,7 @@ export default function AnalyticsPage() {
   return (
     <section>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <h1 className="heading-gradient">Analytics</h1>
+        <h1 className="heading-gradient">Thryvion Health - Analytics</h1>
         <RetryButton
           onRetry={handleRetry}
           label="Refresh"

@@ -11,13 +11,16 @@ import type { ForecastingSlice } from "./slices/forecastingSlice";
 import { createForecastingSlice } from "./slices/forecastingSlice";
 import type { NutritionIntelligenceSlice } from "./slices/nutritionIntelligenceSlice";
 import { createNutritionIntelligenceSlice } from "./slices/nutritionIntelligenceSlice";
+import type { AIInsightsSlice } from "./slices/aiInsightsSlice";
+import { createAIInsightsSlice } from "./slices/aiInsightsSlice";
 
 export type SliceName =
   | "analytics"
   | "marketing"
   | "optimization"
   | "forecasting"
-  | "nutritionIntelligence";
+  | "nutritionIntelligence"
+  | "aiInsights";
 
 export type KPIData = {
   label: string;
@@ -36,6 +39,7 @@ export type DashboardStore = AnalyticsSlice &
   OptimizationSlice &
   ForecastingSlice &
   NutritionIntelligenceSlice &
+  AIInsightsSlice &
   CommonActions;
 
 const createDashboardStore = () =>
@@ -45,6 +49,7 @@ const createDashboardStore = () =>
     ...createOptimizationSlice(set, get, undefined),
     ...createForecastingSlice(set, get, undefined),
     ...createNutritionIntelligenceSlice(set, get, undefined),
+    ...createAIInsightsSlice(set, get, undefined),
 
     setData: <T = unknown>(sliceName: SliceName, payload: T) => {
       const state = get();

@@ -1,46 +1,65 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useDashboardStore } from "@/store/dashboardStore";
 import ClusterVisualization from "@/components/ai/ClusterVisualization";
 import AnomalyVisualization from "@/components/ai/AnomalyVisualization";
 import ForecastOverlay from "@/components/ai/ForecastOverlay";
 import RecommendationCards from "@/components/ai/RecommendationCards";
-import { useAnalyticsStore, useAIInsightsStore } from "@/store/hooks";
 import WidgetContainer from "@/components/widgets/WidgetContainer";
 import LoadingState from "@/components/LoadingState";
 import ErrorDisplay from "@/components/ErrorDisplay";
 import RetryButton from "@/components/RetryButton";
 
 export default function AIInsightsPage() {
-  const aiInsights = useAIInsightsStore();
+  // Individual selectors to avoid infinite loops
+  const clusters = useDashboardStore((state) => state.clusters);
+  const anomalies = useDashboardStore((state) => state.anomalies);
+  const selectedForecast = useDashboardStore((state) => state.selectedForecast);
+  const recommendations = useDashboardStore((state) => state.recommendations);
+  const aiLoading = useDashboardStore((state) => state.aiLoading);
+  const aiError = useDashboardStore((state) => state.aiError);
+  const currentDataset = useDashboardStore((state) => state.currentDataset);
+  const availableDatasets = useDashboardStore((state) => state.availableDatasets);
+  const aggregate = useDashboardStore((state) => state.aggregate);
+  
+  const fetchClusters = useDashboardStore((state) => state.fetchClusters);
+  const detectSalesAnomalies = useDashboardStore((state) => state.detectSalesAnomalies);
+  const fetchRecommendations = useDashboardStore((state) => state.fetchRecommendations);
+  const setCurrentDataset = useDashboardStore((state) => state.setCurrentDataset);
+  const refreshAIInsights = useDashboardStore((state) => state.refreshAIInsights);
+  const setError = useDashboardStore((state) => state.setError);
+  const fetchForecast = useDashboardStore((state) => state.fetchForecast);
 
-  const analytics = useAnalyticsStore();
   const [selectedDataset, setSelectedDataset] = useState<string | null>(null);
+  const hasFetched = useRef(false);
 
   useEffect(() => {
-    // Initial load
-    aiInsights.fetchClusters("campaign", 3);
-    aiInsights.detectSalesAnomalies(2.0);
-    aiInsights.fetchRecommendations(5);
+    if (!hasFetched.current) {
+      hasFetched.current = true;
+      // Initial load
+      fetchClusters("campaign", 3);
+      detectSalesAnomalies(2.0);
+      fetchRecommendations(5);
+    }
   }, []);
 
   // When dataset changes, trigger AI computation
   useEffect(() => {
-    if (selectedDataset && selectedDataset !== aiInsights.currentDataset) {
-      aiInsights.setCurrentDataset(selectedDataset);
+    if (selectedDataset && selectedDataset !== currentDataset) {
+      setCurrentDataset(selectedDataset);
     }
-  }, [selectedDataset]);
+  }, [selectedDataset, currentDataset, setCurrentDataset]);
 
   // Fetch forecast when analytics data is available
   useEffect(() => {
-    if (analytics.aggregate?.by_day && analytics.aggregate.by_day.length > 0) {
-      const history = analytics.aggregate.by_day.map((point) => ({
+    if (aggregate?.by_day && aggregate.by_day.length > 0) {
+      const history = aggregate.by_day.map((point) => ({
         date: point.date,
         value: point.sales,
       }));
-      aiInsights.fetchForecast(history, "date", "value", 7);
+      fetchForecast(history, "date", "value", 7);
     }
-  }, [analytics.aggregate]);
+  }, [aggregate, fetchForecast]);
 
   const handleDatasetChange = async (dataset: string) => {
     setSelectedDataset(dataset);
@@ -48,7 +67,7 @@ export default function AIInsightsPage() {
   };
 
   const handleRetry = () => {
-    aiInsights.refreshAIInsights();
+    refreshAIInsights();
   };
 
   return (
@@ -59,11 +78,11 @@ export default function AIInsightsPage() {
           onRetry={handleRetry}
           label="Refresh"
           variant="outline"
-          disabled={aiInsights.aiLoading}
+          disabled={aiLoading}
         />
-        {aiInsights.availableDatasets.length > 0 && (
+        {availableDatasets && availableDatasets.length > 0 && (
           <select
-            value={selectedDataset || aiInsights.currentDataset || ""}
+            value={selectedDataset || currentDataset || ""}
             onChange={(e) => handleDatasetChange(e.target.value)}
             style={{
               padding: "8px 12px",
@@ -73,7 +92,7 @@ export default function AIInsightsPage() {
             }}
           >
             <option value="">Select Dataset</option>
-            {aiInsights.availableDatasets.map((dataset) => (
+            {availableDatasets.map((dataset) => (
               <option key={dataset} value={dataset}>
                 {dataset}
               </option>
@@ -83,18 +102,18 @@ export default function AIInsightsPage() {
       </div>
 
       <ErrorDisplay
-        error={aiInsights.aiError}
+        error={aiError}
         onRetry={handleRetry}
         variant="card"
         dismissible={true}
-        onDismiss={() => aiInsights.setError(null)}
+        onDismiss={() => setError(null)}
       />
 
-      <LoadingState loading={aiInsights.aiLoading} error={aiInsights.aiError} message="Loading AI insights...">
+      <LoadingState loading={aiLoading} error={aiError} message="Loading AI insights...">
       <WidgetContainer title="Clustering Analysis">
-        {aiInsights.clusters.length > 0 ? (
+        {clusters.length > 0 ? (
           <ClusterVisualization
-            clusters={aiInsights.clusters}
+            clusters={clusters}
             onClusterClick={(cluster) => {
               console.log("Selected cluster:", cluster);
             }}
@@ -107,10 +126,10 @@ export default function AIInsightsPage() {
       </WidgetContainer>
 
       <WidgetContainer title="Anomaly Detection">
-        {aiInsights.anomalies.length > 0 ? (
+        {anomalies.length > 0 ? (
           <AnomalyVisualization
-            anomalies={aiInsights.anomalies}
-            history={analytics.aggregate?.by_day.map((p) => ({ date: p.date, value: p.sales }))}
+            anomalies={anomalies}
+            history={aggregate?.by_day.map((p) => ({ date: p.date, value: p.sales }))}
             onAnomalyClick={(anomaly) => {
               console.log("Selected anomaly:", anomaly);
             }}
@@ -123,10 +142,10 @@ export default function AIInsightsPage() {
       </WidgetContainer>
 
       <WidgetContainer title="Forecasting">
-        {aiInsights.selectedForecast ? (
+        {selectedForecast ? (
           <ForecastOverlay
-            forecast={aiInsights.selectedForecast}
-            history={analytics.aggregate?.by_day.map((p) => ({ date: p.date, value: p.sales }))}
+            forecast={selectedForecast}
+            history={aggregate?.by_day.map((p) => ({ date: p.date, value: p.sales }))}
             onForecastPointClick={(point) => {
               console.log("Selected forecast point:", point);
             }}
@@ -140,7 +159,7 @@ export default function AIInsightsPage() {
 
       <WidgetContainer title="Recommendations">
         <RecommendationCards
-          recommendations={aiInsights.recommendations}
+          recommendations={recommendations}
           onRecommendationClick={(rec) => {
             console.log("Selected recommendation:", rec);
           }}

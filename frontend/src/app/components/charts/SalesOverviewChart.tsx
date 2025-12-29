@@ -1,28 +1,33 @@
 "use client";
-import React, { useEffect } from "react";
-import { useAnalyticsStore } from "@/store/hooks";
+import React, { useEffect, useRef } from "react";
+import { useDashboardStore } from "@/store/dashboardStore";
 
 export default function SalesOverviewChart() {
-  const analytics = useAnalyticsStore();
+  const aggregate = useDashboardStore((state) => state.aggregate);
+  const loading = useDashboardStore((state) => state.loading);
+  const error = useDashboardStore((state) => state.error);
+  const fetchAggregate = useDashboardStore((state) => state.fetchAggregate);
+  const hasFetched = useRef(false);
 
   useEffect(() => {
-    // Fetch data if not already loaded
-    if (!analytics.aggregate && !analytics.loading) {
-      analytics.fetchAggregate();
+    // Fetch data only once if not already loaded
+    if (!aggregate && !loading && !hasFetched.current) {
+      hasFetched.current = true;
+      fetchAggregate();
     }
-  }, [analytics]);
+  }, [aggregate, loading, fetchAggregate]);
 
-  const points = analytics.aggregate?.by_day ?? [];
+  const points = aggregate?.by_day ?? [];
   const max = Math.max(...points.map((p) => p.sales), 1);
 
-  if (analytics.loading) return <div>Loading sales overview…</div>;
-  if (analytics.error) return <div style={{ color: "red" }}>{analytics.error}</div>;
+  if (loading) return <div>Loading sales overview…</div>;
+  if (error) return <div style={{ color: "red" }}>{error}</div>;
 
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h3>Sales Overview</h3>
-        <button onClick={() => analytics.fetchAggregate()}>Refresh</button>
+        <button onClick={() => fetchAggregate()}>Refresh</button>
       </div>
       <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 160, padding: 6, border: "1px solid #e2e8f0", borderRadius: 8 }}>
         {points.map((p) => (

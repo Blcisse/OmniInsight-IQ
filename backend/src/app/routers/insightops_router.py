@@ -19,7 +19,7 @@ from ..services.insightops import fetch_engagement_signals, fetch_kpis
 from ..schemas.insightops_analytics import Anomaly, AnomalyResponse, DeltaSummary, EngagementSummary, SeriesResponse
 from ..schemas.insightops_executive_brief import ExecutiveBriefResponse
 
-router = APIRouter(prefix="/insightops", tags=["InsightOps"])
+router = APIRouter(prefix="/api/insightops", tags=["InsightOps"])
 
 
 class KpiDaily(BaseModel):

@@ -1,25 +1,27 @@
 "use client";
-import React, { useEffect } from "react";
-import { useForecastingStore } from "@/store/hooks";
+import React, { useEffect, useRef } from "react";
+import { useDashboardStore } from "@/store/dashboardStore";
 import LoadingState from "@/components/LoadingState";
 import ErrorDisplay from "@/components/ErrorDisplay";
 import RetryButton from "@/components/RetryButton";
 import CollapsiblePod from "@/ui/CollapsiblePod";
 
 export default function ForecastingPage() {
-  const {
-    metrics,
-    forecasts,
-    loading,
-    error,
-    fetchForecastMetrics,
-    refreshForecasting,
-    setError,
-  } = useForecastingStore();
+  const metrics = useDashboardStore((state) => state.metrics);
+  const forecasts = useDashboardStore((state) => state.forecasts);
+  const loading = useDashboardStore((state) => state.loading);
+  const error = useDashboardStore((state) => state.error);
+  const fetchForecastMetrics = useDashboardStore((state) => state.fetchForecastMetrics);
+  const refreshForecasting = useDashboardStore((state) => state.refreshForecasting);
+  const setError = useDashboardStore((state) => state.setError);
+
+  const hasFetched = useRef(false);
 
   useEffect(() => {
-    fetchForecastMetrics();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (!hasFetched.current) {
+      hasFetched.current = true;
+      fetchForecastMetrics();
+    }
   }, []);
 
   const handleRetry = () => {

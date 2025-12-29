@@ -1,5 +1,5 @@
 import { proxyGet } from "../../../_proxy";
 
 export async function GET(req: Request) {
-  return proxyGet("/insightops/analytics/kpis/summary", req);
+  return proxyGet("/api/insightops/analytics/kpis/summary", req);
 }

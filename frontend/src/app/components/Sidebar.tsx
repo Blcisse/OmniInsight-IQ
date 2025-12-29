@@ -10,6 +10,12 @@ type NavItem = {
   label: string;
   exact?: boolean;
 };
+
+type NavSection = {
+  title: string;
+  items: NavItem[];
+};
+
 const linkStyle: React.CSSProperties = {
   display: "block",
   padding: "0.75rem 1rem",
@@ -32,6 +38,17 @@ const activeLinkStyle: React.CSSProperties = {
   boxShadow: "var(--shadow-glow)",
 };
 
+const sectionHeaderStyle: React.CSSProperties = {
+  fontSize: "0.75rem",
+  fontWeight: 700,
+  color: "var(--text-muted)",
+  marginTop: "1.5rem",
+  marginBottom: "0.5rem",
+  marginLeft: "0.5rem",
+  textTransform: "uppercase",
+  letterSpacing: "0.1em",
+};
+
 export default function Sidebar() {
   const pathname = usePathname();
 
@@ -50,19 +67,39 @@ export default function Sidebar() {
     return pathname?.startsWith(href);
   };
 
-  const navItems = useMemo<NavItem[]>(
+  const navSections = useMemo<NavSection[]>(
     () => [
-      { href: "/dashboard", label: "Dashboard" },
-      { href: "/dashboard/analytics", label: "Analytics" },
-      { href: "/dashboard/marketing", label: "Marketing" },
-      { href: "/dashboard/optimization", label: "Optimization" },
-      { href: "/dashboard/forecasting", label: "Forecasting" },
-      { href: "/dashboard/nutrition", label: "Nutrition Intelligence" },
-      { href: "/dashboard/sales", label: "Sales" },
-      { href: "/dashboard/ai-insights", label: "AI Insights" },
-      { href: "/insightops", label: "InsightOps Studio (Executive)", exact: true },
-      { href: "/insightops/analyst", label: "InsightOps Studio (Analyst)" },
-      { href: "/insightops/brief", label: "InsightOps Studio (Brief)", exact: true },
+      {
+        title: "Overview",
+        items: [
+          { href: "/dashboard", label: "Dashboard" },
+        ],
+      },
+      {
+        title: "Thryvion Health",
+        items: [
+          { href: "/dashboard/nutrition", label: "Nutrition Intelligence" },
+          { href: "/dashboard/optimization", label: "Health Optimization" },
+          { href: "/dashboard/analytics", label: "Health Analytics" },
+        ],
+      },
+      {
+        title: "Business Intelligence",
+        items: [
+          { href: "/dashboard/marketing", label: "Marketing" },
+          { href: "/dashboard/sales", label: "Sales" },
+          { href: "/dashboard/forecasting", label: "Forecasting" },
+          { href: "/dashboard/ai-insights", label: "AI Insights" },
+        ],
+      },
+      {
+        title: "InsightOps Studio",
+        items: [
+          { href: "/insightops", label: "Executive View", exact: true },
+          { href: "/insightops/analyst", label: "Analyst View" },
+          { href: "/insightops/brief", label: "Brief View", exact: true },
+        ],
+      },
     ],
     []
   );
@@ -98,39 +135,54 @@ export default function Sidebar() {
           Navigation
         </motion.h2>
 
-        {navItems.map((item) => {
-          const { href, label } = item;
-          const active = isActive(item);
-          return (
-            <motion.div
-              key={href}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.2 }}
-              whileHover={{ x: 4 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Link
-                href={href}
-                style={active ? activeLinkStyle : linkStyle}
-                onMouseEnter={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.background = "var(--glass-bg)";
-                    e.currentTarget.style.borderColor = "var(--glass-border)";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) {
-                    e.currentTarget.style.background = "transparent";
-                    e.currentTarget.style.borderColor = "transparent";
-                  }
-                }}
+        {navSections.map((section, sectionIndex) => (
+          <div key={section.title}>
+            {sectionIndex > 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.1 + sectionIndex * 0.05 }}
+                style={sectionHeaderStyle}
               >
-                {label}
-              </Link>
-            </motion.div>
-          );
-        })}
+                {section.title}
+              </motion.div>
+            )}
+            
+            {section.items.map((item) => {
+              const { href, label } = item;
+              const active = isActive(item);
+              return (
+                <motion.div
+                  key={href}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2 }}
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Link
+                    href={href}
+                    style={active ? activeLinkStyle : linkStyle}
+                    onMouseEnter={(e) => {
+                      if (!active) {
+                        e.currentTarget.style.background = "var(--glass-bg)";
+                        e.currentTarget.style.borderColor = "var(--glass-border)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!active) {
+                        e.currentTarget.style.background = "transparent";
+                        e.currentTarget.style.borderColor = "transparent";
+                      }
+                    }}
+                  >
+                    {label}
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </div>
+        ))}
       </nav>
     </motion.aside>
   );

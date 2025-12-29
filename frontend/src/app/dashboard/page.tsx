@@ -1,29 +1,36 @@
 "use client";
-import React, { useEffect } from "react";
-import { useAnalyticsStore, useMarketingStore } from "@/store/hooks";
+import React, { useEffect, useRef } from "react";
+import { useDashboardStore } from "@/store/dashboardStore";
 import LoadingState from "@/components/LoadingState";
 import ErrorDisplay from "@/components/ErrorDisplay";
 import RetryButton from "@/components/RetryButton";
 import PodContainer from "@/components/containers/PodContainer";
 
 export default function DashboardPage() {
-  // Analytics slice
-  const analytics = useAnalyticsStore();
-  
-  // Marketing slice
-  const marketing = useMarketingStore();
+  // Individual selectors to avoid infinite loops
+  const aggregate = useDashboardStore((state) => state.aggregate);
+  const campaigns = useDashboardStore((state) => state.campaigns);
+  const loading = useDashboardStore((state) => state.loading);
+  const error = useDashboardStore((state) => state.error);
+  const fetchAggregate = useDashboardStore((state) => state.fetchAggregate);
+  const fetchCampaigns = useDashboardStore((state) => state.fetchCampaigns);
+  const refreshAnalytics = useDashboardStore((state) => state.refreshAnalytics);
+  const refreshMarketing = useDashboardStore((state) => state.refreshMarketing);
+  const setError = useDashboardStore((state) => state.setError);
 
-  const loading = analytics.loading || marketing.loading;
-  const error = analytics.error || marketing.error;
+  const hasFetched = useRef(false);
 
   useEffect(() => {
-    analytics.fetchAggregate();
-    marketing.fetchCampaigns();
-  }, [analytics.fetchAggregate, marketing.fetchCampaigns]);
+    if (!hasFetched.current) {
+      hasFetched.current = true;
+      fetchAggregate();
+      fetchCampaigns();
+    }
+  }, []);
 
   const handleRetry = () => {
-    analytics.refreshAnalytics();
-    marketing.refreshMarketing();
+    refreshAnalytics();
+    refreshMarketing();
   };
 
   return (
@@ -45,36 +52,33 @@ export default function DashboardPage() {
         onRetry={handleRetry}
         variant="card"
         dismissible={true}
-        onDismiss={() => {
-          analytics.setError(null);
-          marketing.setError(null);
-        }}
+        onDismiss={() => setError(null)}
       />
 
       <LoadingState loading={loading} error={error} message="Loading dashboard data...">
 
-      {analytics.aggregate && (
+      {aggregate && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem", marginTop: "1.5rem" }}>
           <PodContainer padding="lg" variant="elevated">
-            <KPI title="Total Sales" value={`$${analytics.aggregate.total_sales.toFixed(2)}`} />
+            <KPI title="Total Sales" value={`$${aggregate.total_sales.toFixed(2)}`} />
           </PodContainer>
           <PodContainer padding="lg" variant="elevated">
-            <KPI title="Avg Order Value" value={`$${analytics.aggregate.avg_order_value.toFixed(2)}`} />
+            <KPI title="Avg Order Value" value={`$${aggregate.avg_order_value.toFixed(2)}`} />
           </PodContainer>
           <PodContainer padding="lg" variant="elevated">
-            <KPI title="Orders" value={analytics.aggregate.orders_count.toString()} />
+            <KPI title="Orders" value={aggregate.orders_count.toString()} />
           </PodContainer>
         </div>
       )}
 
-      {analytics.aggregate && (
+      {aggregate && (
         <div style={{ marginTop: 24 }}>
           <h2>Sales (Last 7 Days)</h2>
-          <MiniChart data={analytics.aggregate.by_day.map((d) => d.sales)} labels={analytics.aggregate.by_day.map((d) => d.date.slice(5))} />
+          <MiniChart data={aggregate.by_day.map((d) => d.sales)} labels={aggregate.by_day.map((d) => d.date.slice(5))} />
         </div>
       )}
 
-      {marketing.campaigns.length > 0 && (
+      {campaigns.length > 0 && (
         <PodContainer
           title="Top Campaigns"
           padding="lg"
@@ -82,7 +86,7 @@ export default function DashboardPage() {
           style={{ marginTop: "1.5rem" }}
         >
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-            {marketing.campaigns.slice(0, 5).map((c) => (
+            {campaigns.slice(0, 5).map((c) => (
               <li
                 key={c.id || c.campaign_id}
                 style={{

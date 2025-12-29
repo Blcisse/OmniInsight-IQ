@@ -84,8 +84,26 @@ def create_app() -> FastAPI:
         pass
 
     try:
+        from .routers import optimization  # type: ignore
+        app.include_router(optimization.router)
+    except Exception:
+        pass
+
+    try:
+        from .routers import nutrition  # type: ignore
+        app.include_router(nutrition.router)
+    except Exception:
+        pass
+
+    try:
         from .routers import insightops_router  # type: ignore
         app.include_router(insightops_router.router)
+    except Exception:
+        pass
+
+    try:
+        from .routers import forecasting  # type: ignore
+        app.include_router(forecasting.router)
     except Exception:
         pass
 

@@ -1,29 +1,34 @@
 "use client";
-import React, { useEffect, useMemo } from "react";
-import { useAnalyticsStore } from "@/store/hooks";
+import React, { useEffect, useMemo, useRef } from "react";
+import { useDashboardStore } from "@/store/dashboardStore";
 
 export default function ForecastVisualization({ horizon = 7 }: { horizon?: number }) {
-  const analytics = useAnalyticsStore();
+  const predictions = useDashboardStore((state) => state.predictions);
+  const loading = useDashboardStore((state) => state.loading);
+  const error = useDashboardStore((state) => state.error);
+  const fetchPredictions = useDashboardStore((state) => state.fetchPredictions);
+  const hasFetched = useRef(false);
 
   useEffect(() => {
-    // Fetch predictions if not already loaded
-    if (!analytics.predictions && !analytics.loading) {
-      analytics.fetchPredictions(horizon);
+    // Fetch predictions only once if not already loaded
+    if (!predictions && !loading && !hasFetched.current) {
+      hasFetched.current = true;
+      fetchPredictions(horizon);
     }
-  }, [analytics, horizon]);
+  }, [predictions, loading, fetchPredictions, horizon]);
 
   const points = useMemo(() => {
-    if (!analytics.predictions) return [];
-    return analytics.predictions.forecast?.map((value, index) => ({
-      date: analytics.predictions?.dates?.[index] || `Day ${index + 1}`,
+    if (!predictions) return [];
+    return predictions.forecast?.map((value, index) => ({
+      date: predictions?.dates?.[index] || `Day ${index + 1}`,
       predicted_sales: value,
     })) ?? [];
-  }, [analytics.predictions]);
+  }, [predictions]);
   
   const max = Math.max(...points.map((p) => p.predicted_sales), 1);
 
-  if (analytics.loading) return <div>Loading forecast…</div>;
-  if (analytics.error) return <div style={{ color: "red" }}>{analytics.error}</div>;
+  if (loading) return <div>Loading forecast…</div>;
+  if (error) return <div style={{ color: "red" }}>{error}</div>;
 
   return (
     <div className="glass-card">
@@ -32,7 +37,7 @@ export default function ForecastVisualization({ horizon = 7 }: { horizon?: numbe
         <button
           className="interactive-button"
           data-size="small"
-          onClick={() => analytics.fetchPredictions(horizon)}
+          onClick={() => fetchPredictions(horizon)}
         >
           Refresh
         </button>
