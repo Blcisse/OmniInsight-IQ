@@ -1,0 +1,6 @@
+[
+  {"id": 1, "date": "2025-11-01", "product": "Laptop Pro 15", "units": 42, "revenue": 62999.58, "region": "NA"},
+  {"id": 2, "date": "2025-11-02", "product": "Wireless Headphones X", "units": 120, "revenue": 23998.80, "region": "EU"},
+  {"id": 3, "date": "2025-11-03", "product": "4K Monitor 27", "units": 35, "revenue": 17499.65, "region": "APAC"},
+  {"id": 4, "date": "2025-11-04", "product": "Mechanical Keyboard", "units": 85, "revenue": 7649.15, "region": "NA"}
+]

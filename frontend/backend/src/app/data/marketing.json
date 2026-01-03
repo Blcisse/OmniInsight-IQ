@@ -1,0 +1,33 @@
+{
+  "campaigns": [
+    {
+      "campaign_id": 101,
+      "name": "Holiday Launch",
+      "channel": "Paid Social",
+      "start_date": "2025-10-28",
+      "end_date": "2025-11-30",
+      "impressions": 120000,
+      "clicks": 4800,
+      "ctr": 0.04,
+      "spend": 3600.0,
+      "cpc": 0.75
+    },
+    {
+      "campaign_id": 102,
+      "name": "Spring Promo",
+      "channel": "Search",
+      "start_date": "2025-03-01",
+      "end_date": "2025-03-31",
+      "impressions": 85000,
+      "clicks": 2550,
+      "ctr": 0.03,
+      "spend": 1785.0,
+      "cpc": 0.70
+    }
+  ],
+  "conversions": [
+    {"campaign_id": 101, "date": "2025-11-02", "conversions": 22, "revenue": 1320.0},
+    {"campaign_id": 101, "date": "2025-11-03", "conversions": 18, "revenue": 1080.0},
+    {"campaign_id": 102, "date": "2025-03-10", "conversions": 12, "revenue": 540.0}
+  ]
+}

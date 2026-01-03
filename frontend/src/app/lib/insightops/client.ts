@@ -45,7 +45,7 @@ type ExecutiveBriefParams = {
 };
 
 const withDefaults = <T extends Record<string, unknown>>(params: T) => ({
-  orgId: "demo_org",
+  org_id: "demo_org", // Changed from orgId to org_id
   ...params,
 });
 

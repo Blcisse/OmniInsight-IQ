@@ -1,0 +1,60 @@
+{
+  "compilerOptions": {
+    // Module & Target
+    "module": "nodenext",
+    "target": "esnext",
+
+    // Typechecking & Strictness
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true,
+
+    // JSX & React
+    "jsx": "react-jsx",
+
+    // Source & Output
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "noEmit": true,
+    "incremental": true,
+    "allowJs": true,
+
+    // Module Resolution
+    "moduleResolution": "nodenext",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+
+    // Paths / Aliases
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/_proxy": ["src/app/api/insightops/_proxy.ts"]
+    },
+
+    // Libraries
+    "lib": ["dom", "dom.iterable", "esnext"],
+
+    // Plugins
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "next-env.d.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts",
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
