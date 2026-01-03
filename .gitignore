@@ -15,3 +15,7 @@ build/
 .next/
 .env
 EOF
+node_modules/
+.DS_Store
+*.db
+.env
