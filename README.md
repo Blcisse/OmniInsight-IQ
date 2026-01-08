@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/images/oiiqlogo.png" alt="OmniInsight-IQ logo" width="320" height="220" />
+  <img src="assets/images/oiiqlogo.png" alt="OmniInsight-IQ logo" width="520" height="420" />
 </p>
 <p align="center"><strong>AI-Driven Performance & Engagement Intelligence Platform</strong></p>
 
@@ -135,9 +135,9 @@ The platform continues to evolve with additional:
 - Performance and cost optimization layers
 
 ## Author
-Developed and maintained by B. Cisse
+Developed and maintained by Balla Cisse (B)
 
-Full-Stack Engineer | GenAI & Intelligent Systems Engineering
+Full-Stack Engineer 
 
 ## License
 This project is provided for demonstration and evaluation purposes.
